@@ -1,16 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import RelocationRequestForm from '../../../components/RelocationRequestForm';
+import { useNavigate } from 'react-router-dom';
 
 
 function Payerdashboard() {
+  const navigate = useNavigate();
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [showRequestForm, setShowRequestForm] = useState(false);
+  const [lastRefresh, setLastRefresh] = useState(new Date());
   const [userData, setUserData] = useState({
     businessName: "John Enterprises",
     tinNumber: "TIN-123456789",
     currentAddress: "123 Main Street, Nairobi, 00100",
     accountStatus: "Active",
-    complianceStatus: "Compliant"
+    complianceStatus: "Compliant",
+    phoneNumber: "+254 712 345 678",
+    email: "john@enterprises.com"
   });
 
   const [notifications, setNotifications] = useState([
@@ -30,28 +35,51 @@ function Payerdashboard() {
           tinNumber: user.tinnumber || "TIN-123456789", 
           currentAddress: user.location || "123 Main Street, Nairobi, 00100",
           accountStatus: user.accountStatus || "Active",
-          complianceStatus: user.complianceStatus || "Compliant"
+          complianceStatus: user.complianceStatus || "Compliant",
+          phoneNumber: user.phone || "+254 712 345 678",
+          email: user.email || "john@enterprises.com"
         });
+        // Load stats and requests from localStorage if available
+        const storedStats = localStorage.getItem('userStats');
+        const storedRequests = localStorage.getItem('userRequests');
+        if (storedStats) {
+          setMockStats(JSON.parse(storedStats));
+        }
+        if (storedRequests) {
+          setMockRequests(JSON.parse(storedRequests));
+        }
       } catch (error) {
         console.error('Error parsing user data:', error);
       }
+    } else {
+      // If no user data, redirect to login
+      navigate('/login');
     }
-  }, []);
+  }, [navigate]);
 
-  const mockStats = {
-    totalRequests: 12,
-    pendingRequests: 3,
-    approvedRequests: 8,
-    rejectedRequests: 1,
-    underVerification: 2
+  // Logout function
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    navigate('/login');
   };
 
-  const mockRequests = [
-    { id: "REQ-001", newPostcode: "00100", dateSubmitted: "2024-03-01", currentStage: "Field Verification", status: "pending" },
-    { id: "REQ-002", newPostcode: "00200", dateSubmitted: "2024-02-28", currentStage: "Admin Approval", status: "under_review" },
-    { id: "REQ-003", newPostcode: "00300", dateSubmitted: "2024-02-25", currentStage: "Completed", status: "approved" },
-    { id: "REQ-004", newPostcode: "00400", dateSubmitted: "2024-02-20", currentStage: "Rejected", status: "rejected" }
-  ];
+  // Refresh dashboard data
+  const refreshDashboard = () => {
+    setLastRefresh(new Date());
+    // Here you would typically fetch fresh data from your API
+    console.log('Dashboard refreshed at:', new Date());
+  };
+
+  const [mockStats, setMockStats] = useState({
+    totalRequests: 0,
+    pendingRequests: 0,
+    approvedRequests: 0,
+    rejectedRequests: 0,
+    underVerification: 0
+  });
+
+  const [mockRequests, setMockRequests] = useState([]);
 
   const getStatusBadge = (status) => {
     const styles = {
@@ -91,6 +119,37 @@ function Payerdashboard() {
 
   const handleRelocationSubmit = (formData) => {
     console.log('Relocation request submitted:', formData);
+    
+    // Generate new request ID
+    const newRequestId = `REQ-${String(mockRequests.length + 1).padStart(3, '0')}`;
+    const currentDate = new Date().toISOString().split('T')[0];
+    
+    // Create new request
+    const newRequest = {
+      id: newRequestId,
+      newPostcode: formData.newPostcode,
+      dateSubmitted: currentDate,
+      currentStage: "Submitted",
+      status: "pending"
+    };
+    
+    // Update requests list
+    const updatedRequests = [newRequest, ...mockRequests];
+    setMockRequests(updatedRequests);
+    localStorage.setItem('userRequests', JSON.stringify(updatedRequests));
+    
+    // Update stats
+    const updatedStats = {
+      totalRequests: mockStats.totalRequests + 1,
+      pendingRequests: mockStats.pendingRequests + 1,
+      approvedRequests: mockStats.approvedRequests,
+      rejectedRequests: mockStats.rejectedRequests,
+      underVerification: mockStats.underVerification
+    };
+    setMockStats(updatedStats);
+    localStorage.setItem('userStats', JSON.stringify(updatedStats));
+    
+    // Add notification
     const newNotification = {
       id: notifications.length + 1,
       message: `Your relocation request for postcode ${formData.newPostcode} has been submitted successfully.`,
@@ -116,12 +175,30 @@ function Payerdashboard() {
                   <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                 </button>
               </div>
+              <button 
+                onClick={refreshDashboard}
+                className="p-2 rounded-lg hover:bg-gray-100"
+                title="Refresh Dashboard"
+              >
+                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
                   {userData.businessName.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2)}
                 </div>
                 <span className="text-sm font-medium text-gray-700">{userData.businessName}</span>
               </div>
+              <button 
+                onClick={handleLogout}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200 flex items-center space-x-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span>Logout</span>
+              </button>
             </div>
           </div>
         </div>
@@ -260,27 +337,41 @@ function Payerdashboard() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {mockRequests.map((request) => (
-                      <tr key={request.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{request.id}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.newPostcode}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.dateSubmitted}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.currentStage}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(request.status)}`}>
-                            {request.status.replace('_', ' ').toUpperCase()}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button 
-                            onClick={() => setSelectedRequest(request)}
-                            className="text-blue-600 hover:text-blue-900"
-                          >
-                            View Details
-                          </button>
+                    {mockRequests.length > 0 ? (
+                      mockRequests.map((request) => (
+                        <tr key={request.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{request.id}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.newPostcode}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.dateSubmitted}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.currentStage}</td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(request.status)}`}>
+                              {request.status.replace('_', ' ').toUpperCase()}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button 
+                              onClick={() => setSelectedRequest(request)}
+                              className="text-blue-600 hover:text-blue-900"
+                            >
+                              View Details
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
+                          <div className="flex flex-col items-center">
+                            <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <p className="text-lg font-medium">No relocation requests yet</p>
+                            <p className="text-sm mt-1">Submit your first relocation request to get started</p>
+                          </div>
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -374,10 +465,10 @@ function Payerdashboard() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Contact Info</p>
-                  <p className="text-gray-900">+254 712 345 678</p>
-                  <p className="text-gray-900">john@enterprises.com</p>
+                  <p className="text-gray-900">{userData.phoneNumber || '+254 712 345 678'}</p>
+                  <p className="text-gray-900">{userData.email || 'john@enterprises.com'}</p>
                 </div>
-                <button className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-200">
+                <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
                   Update Profile
                 </button>
               </div>

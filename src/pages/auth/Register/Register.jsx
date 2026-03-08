@@ -10,6 +10,7 @@ function Register() {
     password_confirmation: '',
     tinnumber: '',
     location: '',
+    role: 'user',
     agree: false,
   });
   const [errors, setErrors] = useState({});
@@ -110,6 +111,18 @@ function Register() {
             className="w-full px-4 py-3 border border-gray-300 rounded-full text-base focus:border-indigo-400 focus:outline-none placeholder-gray-400"
           />
           {errors.location && <div className="text-left text-sm text-red-600">{errors.location[0]}</div>}
+
+          <select
+            name="role"
+            value={form.role}
+            onChange={handleChange}
+            className="w-full px-4 py-3 border border-gray-300 rounded-full text-base focus:border-indigo-400 focus:outline-none"
+          >
+            <option value="user">Regular User</option>
+            <option value="tax_collector">Tax Collector</option>
+            <option value="admin">Admin</option>
+          </select>
+          {errors.role && <div className="text-left text-sm text-red-600">{errors.role[0]}</div>}
 
           <input
             type="password"

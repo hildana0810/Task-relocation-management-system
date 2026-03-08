@@ -33,6 +33,7 @@ class RegisterController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'tinnumber' => ['nullable', 'string', 'max:50'],
             'location' => ['nullable', 'string', 'max:255'],
+            'role' => ['required', 'string', 'in:user,tax_collector,admin'],
         ]);
 
         $user = User::create([
@@ -41,6 +42,7 @@ class RegisterController extends Controller
             'password' => Hash::make($validated['password']),
             'tinnumber' => $validated['tinnumber'] ?? null,
             'location' => $validated['location'] ?? null,
+            'role' => $validated['role'],
         ]);
 
         event(new Registered($user));
@@ -62,6 +64,7 @@ class RegisterController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'tinnumber' => ['nullable', 'string', 'max:50'],
             'location' => ['nullable', 'string', 'max:255'],
+            'role' => ['required', 'string', 'in:user,tax_collector,admin'],
         ]);
 
         $user = User::create([
@@ -70,6 +73,7 @@ class RegisterController extends Controller
             'password' => Hash::make($validated['password']),
             'tinnumber' => $validated['tinnumber'] ?? null,
             'location' => $validated['location'] ?? null,
+            'role' => $validated['role'],
         ]);
 
         event(new Registered($user));
