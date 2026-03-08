@@ -11,6 +11,7 @@ import VerifyRequest from '../pages/dashboard/admin/VerifyRequest';
 import AssignTaxCollector from '../pages/dashboard/admin/AssignTaxCollector';
 import TaxCollectors from '../pages/dashboard/admin/TaxCollectors';
 import Users from '../pages/dashboard/admin/Users';
+import AllUsers from '../pages/dashboard/admin/AllUsers';
 
 // central routing component for the application
 export default function Index() {
@@ -53,6 +54,9 @@ export default function Index() {
         <Route 
         path="/admin/users" 
         element={<Users />} />
+        <Route 
+        path="/admin/all-users" 
+        element={<AllUsers />} />
       </Routes>
     </BrowserRouter>
   );

@@ -8,7 +8,7 @@ function AdminSidebar() {
     { path: '/admin/relocation-requests', label: 'Relocation Requests', icon: '📋' },
     { path: '/admin/assign-tax-collector', label: 'Assign Tax Collector', icon: '👤' },
     { path: '/admin/tax-collectors', label: 'Tax Collectors', icon: '👥' },
-    { path: '/admin/users', label: 'Users', icon: '👨‍💼' },
+    { path: '/admin/all-users', label: 'All Users', icon: '👨‍💼' },
   ];
 
   const isActive = (path) => location.pathname === path;

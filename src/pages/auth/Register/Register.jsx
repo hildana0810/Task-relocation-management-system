@@ -10,6 +10,8 @@ function Register() {
     password_confirmation: '',
     tinnumber: '',
     location: '',
+    phone: '',
+    region: '',
     role: 'user',
     agree: false,
   });
@@ -100,17 +102,63 @@ function Register() {
             onChange={handleChange}
             className="w-full px-4 py-3 border border-gray-300 rounded-full text-base focus:border-indigo-400 focus:outline-none placeholder-gray-400"
           />
-          {errors.tinnumber && <div className="text-left text-sm text-red-600">{errors.tinnumber[0]}</div>}
-
-          <input
-            type="text"
-            name="location"
-            placeholder="Location"
-            value={form.location}
-            onChange={handleChange}
-            className="w-full px-4 py-3 border border-gray-300 rounded-full text-base focus:border-indigo-400 focus:outline-none placeholder-gray-400"
-          />
           {errors.location && <div className="text-left text-sm text-red-600">{errors.location[0]}</div>}
+
+          {form.role === 'tax_collector' && (
+            <>
+              <input
+                type="tel"
+                name="phone"
+                placeholder="Phone Number"
+                value={form.phone}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-full text-base focus:border-indigo-400 focus:outline-none placeholder-gray-400"
+              />
+              {errors.phone && <div className="text-left text-sm text-red-600">{errors.phone[0]}</div>}
+
+              <select
+                name="region"
+                value={form.region}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-full text-base focus:border-indigo-400 focus:outline-none"
+              >
+                <option value="">Select Region</option>
+                <option value="Dar es Salaam">Dar es Salaam</option>
+                <option value="Arusha">Arusha</option>
+                <option value="Mwanza">Mwanza</option>
+                <option value="Dodoma">Dodoma</option>
+                <option value="Tanga">Tanga</option>
+                <option value="Mbeya">Mbeya</option>
+                <option value="Morogoro">Morogoro</option>
+                <option value="Kilimanjaro">Kilimanjaro</option>
+              </select>
+              {errors.region && <div className="text-left text-sm text-red-600">{errors.region[0]}</div>}
+            </>
+          )}
+
+          {form.role === 'user' && (
+            <>
+              <input
+                type="text"
+                name="tinnumber"
+                placeholder="TIN Number"
+                value={form.tinnumber}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-full text-base focus:border-indigo-400 focus:outline-none placeholder-gray-400"
+              />
+              {errors.tinnumber && <div className="text-left text-sm text-red-600">{errors.tinnumber[0]}</div>}
+
+              <input
+                type="text"
+                name="location"
+                placeholder="Location"
+                value={form.location}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-full text-base focus:border-indigo-400 focus:outline-none placeholder-gray-400"
+              />
+              {errors.location && <div className="text-left text-sm text-red-600">{errors.location[0]}</div>}
+            </>
+          )}
 
           <select
             name="role"

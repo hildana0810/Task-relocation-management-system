@@ -64,17 +64,45 @@ class RegisterController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'tinnumber' => ['nullable', 'string', 'max:50'],
             'location' => ['nullable', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'region' => ['nullable', 'string', 'max:255'],
             'role' => ['required', 'string', 'in:user,tax_collector,admin'],
         ]);
 
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'tinnumber' => $validated['tinnumber'] ?? null,
-            'location' => $validated['location'] ?? null,
-            'role' => $validated['role'],
-        ]);
+        // If registering as tax collector, validate required fields and create tax collector record
+        if ($validated['role'] === 'tax_collector') {
+            $request->validate([
+                'phone' => ['required', 'string', 'max:20'],
+                'region' => ['required', 'string', 'max:255'],
+            ]);
+
+            $user = User::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'tinnumber' => null,
+                'location' => null,
+                'role' => $validated['role'],
+            ]);
+
+            // Create tax collector record
+            \App\Models\TaxCollector::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'phone' => $validated['phone'],
+                'region' => $validated['region'],
+                'status' => 'active',
+            ]);
+        } else {
+            $user = User::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'tinnumber' => $validated['tinnumber'] ?? null,
+                'location' => $validated['location'] ?? null,
+                'role' => $validated['role'],
+            ]);
+        }
 
         event(new Registered($user));
 
