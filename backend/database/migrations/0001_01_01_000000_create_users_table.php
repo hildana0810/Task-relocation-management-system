@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('tinnumber')->unique()->nullable();
             $table->string('location');
+            $table->enum('role', ['tax_collector', 'tax_payer', 'admin'])->default('tax_payer');
             $table->string('password');
             $table->timestamp('email_verified_at')->nullable();
             $table->rememberToken();

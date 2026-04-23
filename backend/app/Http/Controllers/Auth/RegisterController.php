@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Role;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -33,7 +34,6 @@ class RegisterController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'tinnumber' => ['nullable', 'string', 'max:50'],
             'location' => ['nullable', 'string', 'max:255'],
-            'role' => ['required', 'string', 'in:user,tax_collector,admin'],
         ]);
 
         $user = User::create([
@@ -42,8 +42,10 @@ class RegisterController extends Controller
             'password' => Hash::make($validated['password']),
             'tinnumber' => $validated['tinnumber'] ?? null,
             'location' => $validated['location'] ?? null,
-            'role' => $validated['role'],
         ]);
+
+        // Assign default user role
+        $user->assignRole('user');
 
         event(new Registered($user));
 
@@ -64,45 +66,18 @@ class RegisterController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'tinnumber' => ['nullable', 'string', 'max:50'],
             'location' => ['nullable', 'string', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:20'],
-            'region' => ['nullable', 'string', 'max:255'],
-            'role' => ['required', 'string', 'in:user,tax_collector,admin'],
         ]);
 
-        // If registering as tax collector, validate required fields and create tax collector record
-        if ($validated['role'] === 'tax_collector') {
-            $request->validate([
-                'phone' => ['required', 'string', 'max:20'],
-                'region' => ['required', 'string', 'max:255'],
-            ]);
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'tinnumber' => $validated['tinnumber'] ?? null,
+            'location' => $validated['location'] ?? null,
+        ]);
 
-            $user = User::create([
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'password' => Hash::make($validated['password']),
-                'tinnumber' => null,
-                'location' => null,
-                'role' => $validated['role'],
-            ]);
-
-            // Create tax collector record
-            \App\Models\TaxCollector::create([
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'phone' => $validated['phone'],
-                'region' => $validated['region'],
-                'status' => 'active',
-            ]);
-        } else {
-            $user = User::create([
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'password' => Hash::make($validated['password']),
-                'tinnumber' => $validated['tinnumber'] ?? null,
-                'location' => $validated['location'] ?? null,
-                'role' => $validated['role'],
-            ]);
-        }
+        // Assign default user role
+        $user->assignRole('user');
 
         event(new Registered($user));
 

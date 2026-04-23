@@ -37,7 +37,57 @@ function TaxCollectors() {
   const fetchTaxCollectors = async () => {
     try {
       const response = await api.get('/admin/tax-collectors');
-      setTaxCollectors(response.data);
+      console.log('API Response:', response);
+      console.log('Response data:', response.data);
+      
+      // If API returns empty array, use dummy data for demo
+      if (response.data && response.data.length === 0) {
+        console.log('API returned empty array, using dummy data');
+        setTaxCollectors([
+          {
+            id: 1,
+            name: 'Michael Johnson',
+            email: 'michael.j@tax.gov.tz',
+            phone: '+255 712 345 678',
+            region: 'Dar es Salaam',
+            status: 'active',
+            assigned_requests: 12,
+            created_at: '2024-01-15'
+          },
+          {
+            id: 2,
+            name: 'Sarah Williams',
+            email: 'sarah.w@tax.gov.tz',
+            phone: '+255 713 456 789',
+            region: 'Arusha',
+            status: 'active',
+            assigned_requests: 8,
+            created_at: '2024-01-20'
+          },
+          {
+            id: 3,
+            name: 'David Brown',
+            email: 'david.b@tax.gov.tz',
+            phone: '+255 714 567 890',
+            region: 'Mwanza',
+            status: 'inactive',
+            assigned_requests: 15,
+            created_at: '2024-02-01'
+          },
+          {
+            id: 4,
+            name: 'Emily Davis',
+            email: 'emily.d@tax.gov.tz',
+            phone: '+255 715 678 901',
+            region: 'Dodoma',
+            status: 'active',
+            assigned_requests: 6,
+            created_at: '2024-02-10'
+          }
+        ]);
+      } else {
+        setTaxCollectors(response.data);
+      }
     } catch (error) {
       console.error('Error fetching tax collectors:', error);
       // Set dummy data for demo

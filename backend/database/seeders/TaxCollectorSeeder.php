@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\TaxCollector;
+use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
 class TaxCollectorSeeder extends Seeder
@@ -13,40 +13,36 @@ class TaxCollectorSeeder extends Seeder
      */
     public function run(): void
     {
-        TaxCollector::create([
+        User::create([
             'name' => 'Michael Johnson',
             'email' => 'michael.j@tax.gov.tz',
-            'phone' => '+255 712 345 678',
-            'region' => 'Dar es Salaam',
-            'status' => 'active',
-            'assigned_requests' => 12,
+            'password' => Hash::make('password123'),
+            'location' => 'Dar es Salaam',
+            'role' => 'tax_collector',
         ]);
 
-        TaxCollector::create([
+        User::create([
             'name' => 'Sarah Williams',
             'email' => 'sarah.w@tax.gov.tz',
-            'phone' => '+255 713 456 789',
-            'region' => 'Arusha',
-            'status' => 'active',
-            'assigned_requests' => 8,
+            'password' => Hash::make('password123'),
+            'location' => 'Arusha',
+            'role' => 'tax_collector',
         ]);
 
-        TaxCollector::create([
+        User::create([
             'name' => 'David Brown',
             'email' => 'david.b@tax.gov.tz',
-            'phone' => '+255 714 567 890',
-            'region' => 'Mwanza',
-            'status' => 'inactive',
-            'assigned_requests' => 15,
+            'password' => Hash::make('password123'),
+            'location' => 'Mwanza',
+            'role' => 'tax_collector',
         ]);
 
-        TaxCollector::create([
+        User::create([
             'name' => 'Emily Davis',
             'email' => 'emily.d@tax.gov.tz',
-            'phone' => '+255 715 678 901',
-            'region' => 'Dodoma',
-            'status' => 'active',
-            'assigned_requests' => 6,
+            'password' => Hash::make('password123'),
+            'location' => 'Dodoma',
+            'role' => 'tax_collector',
         ]);
     }
 }
