@@ -45,12 +45,12 @@ class RegisterController extends Controller
         ]);
 
         // Assign default user role
-        $user->assignRole('user');
+        // $user->assignRole('user');
 
         event(new Registered($user));
 
         // Log the user in (optional)
-        auth()->login($user);
+        // auth()->login($user);
 
         return response()->json(['user' => $user], 201);
     }

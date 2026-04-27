@@ -10,10 +10,7 @@ function Register() {
     password_confirmation: '',
     tinnumber: '',
     location: '',
-    phone: '',
-    region: '',
     role: 'user', // Default to user role
-    agree: false,
   });
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState('');
