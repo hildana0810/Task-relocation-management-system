@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\RelocationRequestController;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,6 +32,13 @@ Route::post('/tax-collector/login', [LoginController::class, 'taxCollectorLogin'
 
 // Tax Collector stats
 Route::get('/tax-collector/stats', [LoginController::class, 'getTaxCollectorStats'])->middleware('auth:sanctum');
+
+// Relocation Request routes
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/relocation-requests', [RelocationRequestController::class, 'index']);
+    Route::post('/relocation-requests', [RelocationRequestController::class, 'store']);
+    Route::get('/relocation-requests/{id}', [RelocationRequestController::class, 'show']);
+});
 
 // Admin routes
 Route::prefix('admin')->group(function () {
