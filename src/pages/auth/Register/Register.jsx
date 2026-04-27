@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../../../utils/api';
 
 
@@ -10,15 +10,17 @@ function Register() {
     password_confirmation: '',
     tinnumber: '',
     location: '',
-    phone: '',
-    region: '',
     role: 'user', // Default to user role
-    agree: false,
   });
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    setIsAnimating(true);
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -75,7 +77,7 @@ function Register() {
         style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}>
       </div>
 
-      <div className="relative z-10 bg-white/20 backdrop-blur-md max-w-sm w-full p-6 rounded-2xl shadow-2xl border border-white/30 max-h-[90vh] overflow-y-auto">
+      <div className={`relative z-10 bg-white/20 backdrop-blur-md max-w-sm w-full p-6 rounded-2xl shadow-2xl border border-white/30 max-h-[90vh] overflow-y-auto transform transition-all duration-700 ease-out ${isAnimating ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-95'}`}>
         <h2 className="mb-4 text-2xl font-semibold text-gray-800 text-center">Create Account</h2>
 
         {message && <p className="mb-4 text-teal-700 text-base">{message}</p>}
@@ -200,7 +202,7 @@ function Register() {
 
         <p className="mt-3 text-xs text-gray-600 text-center">
           Already have an account?{' '}
-          <a href="/login" className="text-gray-800 hover:text-gray-600 font-medium transition-colors">Sign in</a>
+          <a href="/login" className="text-gray-800 hover:text-gray-600 font-medium transition-all duration-300 transform hover:scale-105 hover:underline underline-offset-2">Sign in</a>
         </p>
       </div>
     </div>
