@@ -6,6 +6,7 @@ import api from '../../../utils/api';
 function VerifyRequest() {
   const { requestId } = useParams();
   const [request, setRequest] = useState(null);
+  const [user, setUser] = useState(null);
   const [taxCollectors, setTaxCollectors] = useState([]);
   const [selectedTaxCollector, setSelectedTaxCollector] = useState('');
   const [loading, setLoading] = useState(true);
@@ -21,10 +22,16 @@ function VerifyRequest() {
     }
   }, [requestId]);
 
+  useEffect(() => {
+    if (request?.user_id) {
+      fetchUser(request.user_id);
+    }
+  }, [request?.user_id]);
+
   const checkAuth = () => {
     const token = localStorage.getItem('auth_token');
     const role = localStorage.getItem('user_role');
-    
+
     if (!token || role !== 'admin') {
       navigate('/admin/login');
     }
@@ -33,29 +40,24 @@ function VerifyRequest() {
   const fetchRequest = async () => {
     try {
       const response = await api.get(`/admin/relocation-requests/${requestId}`);
+      console.log('Request data:', response.data);
+      console.log('User ID in request:', response.data?.user_id);
       setRequest(response.data);
     } catch (error) {
       console.error('Error fetching request:', error);
-      // Set dummy data for demo
-      setRequest({
-        id: requestId,
-        user_name: 'John Doe',
-        user_email: 'john@example.com',
-        user_phone: '+255 123 456 789',
-        business_name: 'John Electronics',
-        business_type: 'Electronics Store',
-        business_license: 'BL-2024-001234',
-        old_address: '123 Main St, Dar es Salaam, Tanzania',
-        new_address: '456 New Road, Arusha, Tanzania',
-        relocation_reason: 'Moving to larger premises to accommodate growing business',
-        status: 'pending',
-        created_at: '2024-03-08 10:30:00',
-        documents: [
-          { name: 'Business License', type: 'pdf', url: '#' },
-          { name: 'ID Document', type: 'pdf', url: '#' }
-        ]
-      });
+      setRequest(null);
     }
+  };
+
+  const fetchUser = async (userId) => {
+    // Skip API call and use user data directly from request
+    console.log('Using user data from request instead of API call');
+    setUser({
+      id: userId,
+      name: request?.contact_person || 'Unknown User',
+      email: request?.contact_email || 'No email',
+      phone: request?.contact_phone || 'No phone'
+    });
   };
 
   const fetchTaxCollectors = async () => {
@@ -71,10 +73,14 @@ function VerifyRequest() {
         { id: 3, name: 'David Brown', region: 'Mwanza', status: 'active' },
         { id: 4, name: 'Emily Davis', region: 'Dodoma', status: 'active' }
       ]);
-    } finally {
-      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (request && (user || !request.user_id)) {
+      setLoading(false);
+    }
+  }, [request, user]);
 
   const handleApproveRequest = async () => {
     if (!selectedTaxCollector) {
@@ -89,7 +95,7 @@ function VerifyRequest() {
       await api.post(`/admin/relocation-requests/${requestId}/approve`, {
         tax_collector_id: selectedTaxCollector
       });
-      
+
       setMessage('Request approved successfully!');
       setTimeout(() => {
         navigate('/admin/relocation-requests');
@@ -154,7 +160,7 @@ function VerifyRequest() {
   return (
     <div className="min-h-screen bg-gray-100 flex">
       <AdminSidebar />
-      
+
       <div className="flex-1 p-8">
         <div className="flex justify-between items-center mb-8">
           <div>
@@ -187,15 +193,15 @@ function VerifyRequest() {
             <div className="space-y-3">
               <div>
                 <label className="text-sm text-gray-500">Name</label>
-                <p className="font-medium text-gray-800">{request.user_name}</p>
+                <p className="font-medium text-gray-800">{user?.name || request.contact_person}</p>
               </div>
               <div>
                 <label className="text-sm text-gray-500">Email</label>
-                <p className="font-medium text-gray-800">{request.user_email}</p>
+                <p className="font-medium text-gray-800">{user?.email || request.contact_email}</p>
               </div>
               <div>
                 <label className="text-sm text-gray-500">Phone</label>
-                <p className="font-medium text-gray-800">{request.user_phone}</p>
+                <p className="font-medium text-gray-800">{user?.phone || request.contact_phone}</p>
               </div>
             </div>
           </div>
@@ -275,7 +281,7 @@ function VerifyRequest() {
                   ))}
                 </select>
               </div>
-              
+
               <div className="flex space-x-3">
                 <button
                   onClick={handleApproveRequest}
@@ -305,7 +311,7 @@ function VerifyRequest() {
             Supporting Documents
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {request.documents.map((doc, index) => (
+            {request.documents?.map((doc, index) => (
               <div key={index} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-red-100 rounded flex items-center justify-center">
@@ -322,7 +328,11 @@ function VerifyRequest() {
                   View
                 </button>
               </div>
-            ))}
+            )) || (
+                <div className="col-span-2 text-center text-gray-500 py-4">
+                  No documents uploaded
+                </div>
+              )}
           </div>
         </div>
       </div>

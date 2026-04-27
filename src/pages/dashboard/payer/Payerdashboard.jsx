@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import RelocationRequestForm from '../../../components/RelocationRequestForm';
 import { useNavigate } from 'react-router-dom';
+import api from '../../../utils/api';
 
 
 function Payerdashboard() {
@@ -32,22 +33,19 @@ function Payerdashboard() {
         const user = JSON.parse(storedUser);
         setUserData({
           businessName: user.name || "John Enterprises",
-          tinNumber: user.tinnumber || "TIN-123456789", 
+          tinNumber: user.tinnumber || "TIN-123456789",
           currentAddress: user.location || "123 Main Street, Nairobi, 00100",
           accountStatus: user.accountStatus || "Active",
           complianceStatus: user.complianceStatus || "Compliant",
           phoneNumber: user.phone || "+254 712 345 678",
           email: user.email || "john@enterprises.com"
         });
-        // Load stats and requests from localStorage if available
-        const storedStats = localStorage.getItem('userStats');
-        const storedRequests = localStorage.getItem('userRequests');
-        if (storedStats) {
-          setMockStats(JSON.parse(storedStats));
-        }
-        if (storedRequests) {
-          setMockRequests(JSON.parse(storedRequests));
-        }
+        // Clear any existing localStorage request data
+        localStorage.removeItem('userStats');
+        localStorage.removeItem('userRequests');
+
+        // Fetch real data from database
+        fetchUserRequests();
       } catch (error) {
         console.error('Error parsing user data:', error);
       }
@@ -56,6 +54,37 @@ function Payerdashboard() {
       navigate('/login');
     }
   }, [navigate]);
+
+  // Fetch user requests from database
+  const fetchUserRequests = async () => {
+    try {
+      const response = await api.get('/relocation-requests');
+      const userRequests = response.data;
+      setRequests(userRequests);
+
+      // Calculate stats from real data
+      const calculatedStats = {
+        totalRequests: userRequests.length,
+        pendingRequests: userRequests.filter(r => r.status === 'pending').length,
+        approvedRequests: userRequests.filter(r => r.status === 'approved').length,
+        rejectedRequests: userRequests.filter(r => r.status === 'rejected').length,
+        underVerification: userRequests.filter(r => r.status === 'under_review').length
+      };
+      setStats(calculatedStats);
+    } catch (error) {
+      console.error('Error fetching user requests:', error);
+      setRequests([]);
+      setStats({
+        totalRequests: 0,
+        pendingRequests: 0,
+        approvedRequests: 0,
+        rejectedRequests: 0,
+        underVerification: 0
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Logout function
   const handleLogout = () => {
@@ -71,7 +100,7 @@ function Payerdashboard() {
     console.log('Dashboard refreshed at:', new Date());
   };
 
-  const [mockStats, setMockStats] = useState({
+  const [stats, setStats] = useState({
     totalRequests: 0,
     pendingRequests: 0,
     approvedRequests: 0,
@@ -79,7 +108,8 @@ function Payerdashboard() {
     underVerification: 0
   });
 
-  const [mockRequests, setMockRequests] = useState([]);
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const getStatusBadge = (status) => {
     const styles = {
@@ -100,59 +130,32 @@ function Payerdashboard() {
     return styles[status] || "bg-gray-100 text-gray-800";
   };
 
-  const getProgressPercentage = (stage) => {
+  const getProgressPercentage = (status) => {
     const stages = {
-      "Submitted": 20,
-      "Assigned to Tax Collector": 40,
-      "Field Verified": 60,
-      "Admin Approval": 80,
-      "Completed": 100
+      "pending": 20,
+      "under_review": 40,
+      "approved": 80,
+      "completed": 100
     };
-    return stages[stage] || 0;
+    return stages[status] || 0;
   };
 
   const markNotificationAsRead = (id) => {
-    setNotifications(notifications.map(notif => 
+    setNotifications(notifications.map(notif =>
       notif.id === id ? { ...notif, read: true } : notif
     ));
   };
 
-  const handleRelocationSubmit = (formData) => {
-    console.log('Relocation request submitted:', formData);
-    
-    // Generate new request ID
-    const newRequestId = `REQ-${String(mockRequests.length + 1).padStart(3, '0')}`;
-    const currentDate = new Date().toISOString().split('T')[0];
-    
-    // Create new request
-    const newRequest = {
-      id: newRequestId,
-      newPostcode: formData.newPostcode,
-      dateSubmitted: currentDate,
-      currentStage: "Submitted",
-      status: "pending"
-    };
-    
-    // Update requests list
-    const updatedRequests = [newRequest, ...mockRequests];
-    setMockRequests(updatedRequests);
-    localStorage.setItem('userRequests', JSON.stringify(updatedRequests));
-    
-    // Update stats
-    const updatedStats = {
-      totalRequests: mockStats.totalRequests + 1,
-      pendingRequests: mockStats.pendingRequests + 1,
-      approvedRequests: mockStats.approvedRequests,
-      rejectedRequests: mockStats.rejectedRequests,
-      underVerification: mockStats.underVerification
-    };
-    setMockStats(updatedStats);
-    localStorage.setItem('userStats', JSON.stringify(updatedStats));
-    
+  const handleRelocationSubmit = (response) => {
+    console.log('Relocation request submitted:', response);
+
+    // Refresh the requests list to get the latest data from database
+    fetchUserRequests();
+
     // Add notification
     const newNotification = {
       id: notifications.length + 1,
-      message: `Your relocation request for postcode ${formData.newPostcode} has been submitted successfully.`,
+      message: `Your relocation request has been submitted successfully.`,
       time: "Just now",
       read: false
     };
@@ -175,7 +178,7 @@ function Payerdashboard() {
                   <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                 </button>
               </div>
-              <button 
+              <button
                 onClick={refreshDashboard}
                 className="p-2 rounded-lg hover:bg-gray-100"
                 title="Refresh Dashboard"
@@ -190,7 +193,7 @@ function Payerdashboard() {
                 </div>
                 <span className="text-sm font-medium text-gray-700">{userData.businessName}</span>
               </div>
-              <button 
+              <button
                 onClick={handleLogout}
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200 flex items-center space-x-2"
               >
@@ -241,7 +244,7 @@ function Payerdashboard() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Requests</p>
-                <p className="text-2xl font-bold text-gray-900">{mockStats.totalRequests}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalRequests}</p>
               </div>
             </div>
           </div>
@@ -255,7 +258,7 @@ function Payerdashboard() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Pending</p>
-                <p className="text-2xl font-bold text-gray-900">{mockStats.pendingRequests}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.pendingRequests}</p>
               </div>
             </div>
           </div>
@@ -269,7 +272,7 @@ function Payerdashboard() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Approved</p>
-                <p className="text-2xl font-bold text-gray-900">{mockStats.approvedRequests}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.approvedRequests}</p>
               </div>
             </div>
           </div>
@@ -283,7 +286,7 @@ function Payerdashboard() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Rejected</p>
-                <p className="text-2xl font-bold text-gray-900">{mockStats.rejectedRequests}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.rejectedRequests}</p>
               </div>
             </div>
           </div>
@@ -298,7 +301,7 @@ function Payerdashboard() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Under Verification</p>
-                <p className="text-2xl font-bold text-gray-900">{mockStats.underVerification}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.underVerification}</p>
               </div>
             </div>
           </div>
@@ -306,7 +309,7 @@ function Payerdashboard() {
 
         {/* Submit New Relocation Button */}
         <div className="mb-8">
-          <button 
+          <button
             onClick={() => setShowRequestForm(true)}
             className="w-full md:w-auto px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg shadow hover:bg-blue-700 transition duration-200 flex items-center justify-center space-x-2"
           >
@@ -337,20 +340,20 @@ function Payerdashboard() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {mockRequests.length > 0 ? (
-                      mockRequests.map((request) => (
+                    {requests.length > 0 ? (
+                      requests.map((request) => (
                         <tr key={request.id} className="hover:bg-gray-50">
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{request.id}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.newPostcode}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.dateSubmitted}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.currentStage}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.new_postcode}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(request.created_at).toLocaleDateString()}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.status}</td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(request.status)}`}>
-                              {request.status.replace('_', ' ').toUpperCase()}
+                              {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button 
+                            <button
                               onClick={() => setSelectedRequest(request)}
                               className="text-blue-600 hover:text-blue-900"
                             >
@@ -360,17 +363,28 @@ function Payerdashboard() {
                         </tr>
                       ))
                     ) : (
-                      <tr>
-                        <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
-                          <div className="flex flex-col items-center">
-                            <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            <p className="text-lg font-medium">No relocation requests yet</p>
-                            <p className="text-sm mt-1">Submit your first relocation request to get started</p>
-                          </div>
-                        </td>
-                      </tr>
+                      loading ? (
+                        <tr>
+                          <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
+                            <div className="flex flex-col items-center">
+                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-3"></div>
+                              <p className="text-lg font-medium">Loading requests...</p>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : (
+                        <tr>
+                          <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
+                            <div className="flex flex-col items-center">
+                              <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                              <p className="text-lg font-medium">No relocation requests yet</p>
+                              <p className="text-sm mt-1">Submit your first relocation request to get started</p>
+                            </div>
+                          </td>
+                        </tr>
+                      )
                     )}
                   </tbody>
                 </table>
@@ -384,29 +398,27 @@ function Payerdashboard() {
                 <div className="mb-4">
                   <div className="flex justify-between text-sm text-gray-600 mb-2">
                     <span>Progress</span>
-                    <span>{getProgressPercentage(selectedRequest.currentStage)}%</span>
+                    <span>{getProgressPercentage(selectedRequest.status)}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
+                    <div
                       className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${getProgressPercentage(selectedRequest.currentStage)}%` }}
+                      style={{ width: `${getProgressPercentage(selectedRequest.status)}%` }}
                     ></div>
                   </div>
                 </div>
                 <div className="space-y-4">
                   {['Submitted', 'Assigned to Tax Collector', 'Field Verified', 'Admin Approval', 'Completed'].map((stage, index) => (
                     <div key={stage} className="flex items-center">
-                      <div className={`w-4 h-4 rounded-full mr-4 ${
-                        getProgressPercentage(selectedRequest.currentStage) >= (index + 1) * 20 
-                          ? 'bg-blue-600' 
-                          : 'bg-gray-300'
-                      }`}></div>
+                      <div className={`w-4 h-4 rounded-full mr-4 ${getProgressPercentage(selectedRequest.status) >= (index + 1) * 20
+                        ? 'bg-blue-600'
+                        : 'bg-gray-300'
+                        }`}></div>
                       <div className="flex-1">
-                        <p className={`text-sm ${
-                          getProgressPercentage(selectedRequest.currentStage) >= (index + 1) * 20 
-                            ? 'text-gray-900 font-medium' 
-                            : 'text-gray-500'
-                        }`}>{stage}</p>
+                        <p className={`text-sm ${getProgressPercentage(selectedRequest.status) >= (index + 1) * 20
+                          ? 'text-gray-900 font-medium'
+                          : 'text-gray-500'
+                          }`}>{stage}</p>
                       </div>
                     </div>
                   ))}
@@ -424,15 +436,15 @@ function Payerdashboard() {
               </div>
               <div className="p-6 space-y-4">
                 {notifications.map((notification) => (
-                  <div 
-                    key={notification.id} 
+                  <div
+                    key={notification.id}
                     className={`p-3 rounded-lg ${notification.read ? 'bg-gray-50' : 'bg-blue-50 border border-blue-200'}`}
                   >
                     <p className="text-sm text-gray-700">{notification.message}</p>
                     <div className="flex justify-between items-center mt-2">
                       <span className="text-xs text-gray-500">{notification.time}</span>
                       {!notification.read && (
-                        <button 
+                        <button
                           onClick={() => markNotificationAsRead(notification.id)}
                           className="text-xs text-blue-600 hover:text-blue-800"
                         >
