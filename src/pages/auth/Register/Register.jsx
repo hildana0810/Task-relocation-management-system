@@ -55,12 +55,20 @@ function Register() {
 
       console.log(response.data);
     } catch (err) {
+      // Handle validation errors (like duplicate email/tin) properly
       if (err.response && err.response.data) {
         if (err.response.data.errors) {
           setErrors(err.response.data.errors);
         } else if (err.response.data.message) {
-          setMessage(err.response.data.message);
+          // Handle SQL constraint violations for TIN number
+          if (err.response.data.message.includes('users_tinnumber_unique')) {
+            setErrors({ tinnumber: ['The TIN number has already been taken.'] });
+          } else {
+            setMessage(err.response.data.message);
+          }
         }
+      } else {
+        setMessage('Registration failed. Please try again.');
       }
     }
   };
