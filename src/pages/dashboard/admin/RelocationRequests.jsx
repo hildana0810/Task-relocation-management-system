@@ -18,7 +18,7 @@ function RelocationRequests() {
   const checkAuth = () => {
     const token = localStorage.getItem('auth_token');
     const role = localStorage.getItem('user_role');
-    
+
     if (!token || role !== 'admin') {
       navigate('/admin/login');
     }
@@ -30,45 +30,8 @@ function RelocationRequests() {
       setRequests(response.data);
     } catch (error) {
       console.error('Error fetching requests:', error);
-      // Set dummy data for demo
-      setRequests([
-        {
-          id: 1,
-          user_name: 'John Doe',
-          user_email: 'john@example.com',
-          business_name: 'John Electronics',
-          business_type: 'Electronics Store',
-          old_address: '123 Main St, Dar es Salaam',
-          new_address: '456 New Road, Arusha',
-          status: 'pending',
-          created_at: '2024-03-08 10:30:00',
-          tax_collector: null
-        },
-        {
-          id: 2,
-          user_name: 'Jane Smith',
-          user_email: 'jane@example.com',
-          business_name: 'Jane Boutique',
-          business_type: 'Clothing Store',
-          old_address: '789 Oak Ave, Mwanza',
-          new_address: '321 Pine St, Dodoma',
-          status: 'approved',
-          created_at: '2024-03-07 14:15:00',
-          tax_collector: 'Michael Johnson'
-        },
-        {
-          id: 3,
-          user_name: 'Robert Brown',
-          user_email: 'robert@example.com',
-          business_name: 'Brown Restaurant',
-          business_type: 'Restaurant',
-          old_address: '555 Elm St, Tanga',
-          new_address: '999 Maple Dr, Mbeya',
-          status: 'pending',
-          created_at: '2024-03-06 09:45:00',
-          tax_collector: null
-        }
-      ]);
+      // Don't set dummy data - only use database data
+      setRequests([]);
     } finally {
       setLoading(false);
     }
@@ -76,9 +39,9 @@ function RelocationRequests() {
 
   const filteredRequests = requests.filter(request => {
     const matchesFilter = filter === 'all' || request.status === filter;
-    const matchesSearch = request.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         request.business_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         request.user_email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (request.user_name?.toLowerCase().includes(searchTerm.toLowerCase()) || '') ||
+      (request.business_name?.toLowerCase().includes(searchTerm.toLowerCase()) || '') ||
+      (request.user_email?.toLowerCase().includes(searchTerm.toLowerCase()) || '');
     return matchesFilter && matchesSearch;
   });
 
@@ -115,7 +78,7 @@ function RelocationRequests() {
   return (
     <div className="min-h-screen bg-gray-100 flex">
       <AdminSidebar />
-      
+
       <div className="flex-1 p-8">
         <div className="flex justify-between items-center mb-8">
           <div>
@@ -194,7 +157,7 @@ function RelocationRequests() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">{request.user_name}</div>
-                        <div className="text-sm text-gray-500">{request.user_email}</div>
+                        <div className="text-sm font-bold text-gray-500">{request.user.name}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -240,7 +203,7 @@ function RelocationRequests() {
               </tbody>
             </table>
           </div>
-          
+
           {filteredRequests.length === 0 && (
             <div className="text-center py-12">
               <div className="text-gray-500">

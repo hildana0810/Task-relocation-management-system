@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import api from '../utils/api';
 
 function RelocationRequestForm({ isOpen, onClose, onSubmit }) {
   const [formData, setFormData] = useState({
@@ -17,10 +18,11 @@ function RelocationRequestForm({ isOpen, onClose, onSubmit }) {
   });
 
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.businessName.trim()) newErrors.businessName = 'Business name is required';
     if (!formData.tinNumber.trim()) newErrors.tinNumber = 'TIN number is required';
     if (!formData.currentAddress.trim()) newErrors.currentAddress = 'Current address is required';
@@ -32,17 +34,17 @@ function RelocationRequestForm({ isOpen, onClose, onSubmit }) {
     if (!formData.contactPerson.trim()) newErrors.contactPerson = 'Contact person is required';
     if (!formData.contactPhone.trim()) newErrors.contactPhone = 'Contact phone is required';
     if (!formData.contactEmail.trim()) newErrors.contactEmail = 'Contact email is required';
-    
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (formData.contactEmail && !emailRegex.test(formData.contactEmail)) {
       newErrors.contactEmail = 'Invalid email format';
     }
-    
+
     const phoneRegex = /^[+]?[\d\s\-()]+$/;
     if (formData.contactPhone && !phoneRegex.test(formData.contactPhone)) {
       newErrors.contactPhone = 'Invalid phone format';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -53,7 +55,7 @@ function RelocationRequestForm({ isOpen, onClose, onSubmit }) {
       ...prev,
       [name]: value
     }));
-    
+
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -62,25 +64,62 @@ function RelocationRequestForm({ isOpen, onClose, onSubmit }) {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validateForm()) {
-      onSubmit(formData);
-      setFormData({
-        businessName: '',
-        tinNumber: '',
-        currentAddress: '',
-        currentPostcode: '',
-        newAddress: '',
-        newPostcode: '',
-        relocationDate: '',
-        reasonForRelocation: '',
-        contactPerson: '',
-        contactPhone: '',
-        contactEmail: '',
-        additionalInfo: ''
-      });
-      onClose();
+    if (validateForm() && !isSubmitting) {
+      setIsSubmitting(true);
+      try {
+        const response = await api.post('/relocation-requests', {
+          business_name: formData.businessName,
+          tin_number: formData.tinNumber,
+          current_address: formData.currentAddress,
+          current_postcode: formData.currentPostcode,
+          new_address: formData.newAddress,
+          new_postcode: formData.newPostcode,
+          relocation_date: formData.relocationDate,
+          reason_for_relocation: formData.reasonForRelocation,
+          contact_person: formData.contactPerson,
+          contact_phone: formData.contactPhone,
+          contact_email: formData.contactEmail,
+          additional_info: formData.additionalInfo
+        });
+
+        // Call onSubmit prop if provided
+        if (onSubmit) {
+          onSubmit(response.data);
+        }
+
+        // Reset form
+        setFormData({
+          businessName: '',
+          tinNumber: '',
+          currentAddress: '',
+          currentPostcode: '',
+          newAddress: '',
+          newPostcode: '',
+          relocationDate: '',
+          reasonForRelocation: '',
+          contactPerson: '',
+          contactPhone: '',
+          contactEmail: '',
+          additionalInfo: ''
+        });
+
+        onClose();
+
+        // Clear specific localStorage items
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user');
+
+        // Show success message
+        alert('Relocation request submitted successfully!');
+
+      } catch (error) {
+        console.error('Error submitting relocation request:', error);
+        alert('Error submitting request. Please try again.');
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -117,9 +156,8 @@ function RelocationRequestForm({ isOpen, onClose, onSubmit }) {
                   name="businessName"
                   value={formData.businessName}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.businessName ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.businessName ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="Enter business name"
                 />
                 {errors.businessName && (
@@ -136,9 +174,8 @@ function RelocationRequestForm({ isOpen, onClose, onSubmit }) {
                   name="tinNumber"
                   value={formData.tinNumber}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.tinNumber ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.tinNumber ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="Enter TIN number"
                 />
                 {errors.tinNumber && (
@@ -161,9 +198,8 @@ function RelocationRequestForm({ isOpen, onClose, onSubmit }) {
                   name="currentAddress"
                   value={formData.currentAddress}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.currentAddress ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.currentAddress ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="Enter current address"
                 />
                 {errors.currentAddress && (
@@ -181,9 +217,8 @@ function RelocationRequestForm({ isOpen, onClose, onSubmit }) {
                     name="currentPostcode"
                     value={formData.currentPostcode}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.currentPostcode ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.currentPostcode ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="Enter current postcode"
                   />
                   {errors.currentPostcode && (
@@ -200,9 +235,8 @@ function RelocationRequestForm({ isOpen, onClose, onSubmit }) {
                     name="newPostcode"
                     value={formData.newPostcode}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.newPostcode ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.newPostcode ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="Enter new postcode"
                   />
                   {errors.newPostcode && (
@@ -220,9 +254,8 @@ function RelocationRequestForm({ isOpen, onClose, onSubmit }) {
                   name="newAddress"
                   value={formData.newAddress}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.newAddress ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.newAddress ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="Enter new address"
                 />
                 {errors.newAddress && (
@@ -245,9 +278,8 @@ function RelocationRequestForm({ isOpen, onClose, onSubmit }) {
                   name="relocationDate"
                   value={formData.relocationDate}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.relocationDate ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.relocationDate ? 'border-red-500' : 'border-gray-300'
+                    }`}
                 />
                 {errors.relocationDate && (
                   <p className="mt-1 text-sm text-red-600">{errors.relocationDate}</p>
@@ -263,9 +295,8 @@ function RelocationRequestForm({ isOpen, onClose, onSubmit }) {
                   value={formData.reasonForRelocation}
                   onChange={handleInputChange}
                   rows={3}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.reasonForRelocation ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.reasonForRelocation ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="Explain why you are relocating your business"
                 />
                 {errors.reasonForRelocation && (
@@ -288,9 +319,8 @@ function RelocationRequestForm({ isOpen, onClose, onSubmit }) {
                   name="contactPerson"
                   value={formData.contactPerson}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.contactPerson ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.contactPerson ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="Enter contact person name"
                 />
                 {errors.contactPerson && (
@@ -307,9 +337,8 @@ function RelocationRequestForm({ isOpen, onClose, onSubmit }) {
                   name="contactPhone"
                   value={formData.contactPhone}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.contactPhone ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.contactPhone ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="Enter phone number"
                 />
                 {errors.contactPhone && (
@@ -326,9 +355,8 @@ function RelocationRequestForm({ isOpen, onClose, onSubmit }) {
                   name="contactEmail"
                   value={formData.contactEmail}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.contactEmail ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.contactEmail ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="Enter email address"
                 />
                 {errors.contactEmail && (
@@ -364,9 +392,10 @@ function RelocationRequestForm({ isOpen, onClose, onSubmit }) {
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200"
+              disabled={isSubmitting}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Submit Request
+              {isSubmitting ? 'Submitting...' : 'Submit Request'}
             </button>
           </div>
         </form>
