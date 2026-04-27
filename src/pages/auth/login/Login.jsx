@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../../../utils/api';
 
 function Login() {
@@ -10,6 +10,11 @@ function Login() {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    setIsAnimating(true);
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -68,7 +73,7 @@ function Login() {
         style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}>
       </div>
 
-      <div className="relative z-10 bg-white/20 backdrop-blur-md max-w-sm w-full p-6 rounded-2xl shadow-2xl border border-white/30">
+      <div className={`relative z-10 bg-white/20 backdrop-blur-md max-w-sm w-full p-6 rounded-2xl shadow-2xl border border-white/30 transform transition-all duration-700 ease-out ${isAnimating ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-95'}`}>
         <h2 className="mb-6 text-2xl font-semibold text-gray-800 text-center">Welcome Back</h2>
 
         {message && (
@@ -140,7 +145,7 @@ function Login() {
 
         <p className="mt-4 text-xs text-gray-600 text-center">
           Don't have an account?{' '}
-          <a href="/" className="text-gray-800 hover:text-gray-600 font-medium transition-colors">Sign up</a>
+          <a href="/" className="text-gray-800 hover:text-gray-600 font-medium transition-all duration-300 transform hover:scale-105 hover:underline underline-offset-2">Sign up</a>
         </p>
       </div>
     </div>
