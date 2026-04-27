@@ -33,27 +33,39 @@ function Register() {
 
     try {
       const response = await api.post('/register', form);
-      setMessage('Registration successful! Redirecting to login...');
       
-      // Store token if returned
-      if (response.data.token) {
-        localStorage.setItem('auth_token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+      // Only redirect on successful registration (status 200-299)
+      if (response.status >= 200 && response.status < 300) {
+        setMessage('Registration successful! Redirecting to login...');
+        
+        // Store token if returned
+        if (response.data.token) {
+          localStorage.setItem('auth_token', response.data.token);
+          localStorage.setItem('user', JSON.stringify(response.data.user));
+        }
+        
+        // Redirect to login page after 2 seconds
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000);
+        
+        console.log(response.data);
       }
-      
-      // Redirect to login page after 2 seconds
-      setTimeout(() => {
-        window.location.href = '/login';
-      }, 2000);
-      
-      console.log(response.data);
     } catch (err) {
+      // Handle validation errors (like duplicate email/tin) properly
       if (err.response && err.response.data) {
         if (err.response.data.errors) {
           setErrors(err.response.data.errors);
         } else if (err.response.data.message) {
-          setMessage(err.response.data.message);
+          // Handle SQL constraint violations for TIN number
+          if (err.response.data.message.includes('users_tinnumber_unique')) {
+            setErrors({ tinnumber: ['The TIN number has already been taken.'] });
+          } else {
+            setMessage(err.response.data.message);
+          }
         }
+      } else {
+        setMessage('Registration failed. Please try again.');
       }
     }
   };
