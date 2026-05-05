@@ -145,7 +145,7 @@ function Login() {
 
         <p className="mt-4 text-xs text-gray-600 text-center">
           Don't have an account?{' '}
-          <a href="/" className="text-gray-800 hover:text-gray-600 font-medium transition-all duration-300 transform hover:scale-105 hover:underline underline-offset-2">Sign up</a>
+          <a href="/register" className="text-gray-800 hover:text-gray-600 font-medium transition-all duration-300 transform hover:scale-105 hover:underline underline-offset-2">Sign up</a>
         </p>
       </div>
     </div>
