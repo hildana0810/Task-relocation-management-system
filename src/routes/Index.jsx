@@ -18,10 +18,13 @@ export default function Index() {
       <Routes>
         <Route 
         path="/" 
-        element={<Register />} />
+        element={<Login />} />
         <Route 
         path="/login" 
         element={<Login />} />
+        <Route 
+        path="/register" 
+        element={<Register />} />
         <Route 
         path="/payerdashboard" 
         element={<Payerdashboard />} />
