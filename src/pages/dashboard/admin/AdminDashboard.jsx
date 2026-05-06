@@ -23,7 +23,7 @@ function AdminDashboard() {
     const role = localStorage.getItem('user_role');
     
     if (!token || role !== 'admin') {
-      navigate('/admin/login');
+      navigate('/login');
     }
   };
 
@@ -49,7 +49,7 @@ function AdminDashboard() {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('admin');
     localStorage.removeItem('user_role');
-    navigate('/admin/login');
+    navigate('/login');
   };
 
   if (loading) {
