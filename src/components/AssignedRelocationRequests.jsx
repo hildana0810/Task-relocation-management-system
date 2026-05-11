@@ -84,19 +84,17 @@ function UserDetailsModal({ isOpen, onClose, request, isAnimating }) {
 
         {/* Modal */}
         <div
-          className={`relative z-50 w-full max-w-2xl transform rounded-xl bg-white shadow-2xl ${isAnimating ? 'modal-enter' : 'modal-exit'
+          className={`relative z-50 w-full max-w-2xl transform border-2 border-gray-400 bg-white shadow-lg ${isAnimating ? 'modal-enter' : 'modal-exit'
             }`}
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-            <h3 className="text-xl font-semibold text-gray-900">Taxpayer Details</h3>
+          <div className="flex items-center justify-between border-b-2 border-gray-400 bg-gray-100 px-6 py-4">
+            <h3 className="text-xl font-bold text-gray-800">Taxpayer Details</h3>
             <button
               onClick={onClose}
-              className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors duration-200"
+              className="border border-gray-400 bg-white px-3 py-1 text-gray-600 hover:bg-gray-200 transition-colors duration-200 font-bold"
             >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              X
             </button>
           </div>
 
@@ -104,8 +102,8 @@ function UserDetailsModal({ isOpen, onClose, request, isAnimating }) {
           <div className="px-6 py-4">
             <div className="space-y-6">
               {/* Business Information */}
-              <div>
-                <h4 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">Business Information</h4>
+              <div className="border border-gray-300 bg-gray-50 p-4">
+                <h4 className="text-base font-bold text-gray-700 border-b border-gray-300 pb-2 mb-3">Business Information</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-600">Business Name</p>
@@ -119,16 +117,16 @@ function UserDetailsModal({ isOpen, onClose, request, isAnimating }) {
               </div>
 
               {/* Address Information */}
-              <div>
-                <h4 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">Relocation Details</h4>
+              <div className="border border-gray-300 bg-gray-50 p-4">
+                <h4 className="text-base font-bold text-gray-700 border-b border-gray-300 pb-2 mb-3">Relocation Details</h4>
                 <div className="space-y-4">
                   <div>
                     <p className="text-sm text-gray-600">Current Address</p>
-                    <p className="font-medium text-gray-900 bg-gray-50 p-3 rounded-lg">{request?.current_address || 'N/A'}</p>
+                    <p className="font-medium text-gray-900 border border-gray-300 bg-white p-3">{request?.current_address || 'N/A'}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">New Address</p>
-                    <p className="font-medium text-gray-900 bg-blue-50 p-3 rounded-lg">{request?.new_address || 'N/A'}</p>
+                    <p className="font-medium text-gray-900 border border-gray-300 bg-white p-3">{request?.new_address || 'N/A'}</p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -150,8 +148,8 @@ function UserDetailsModal({ isOpen, onClose, request, isAnimating }) {
               </div>
 
               {/* Additional Information */}
-              <div>
-                <h4 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">Additional Information</h4>
+              <div className="border border-gray-300 bg-gray-50 p-4">
+                <h4 className="text-base font-bold text-gray-700 border-b border-gray-300 pb-2 mb-3">Additional Information</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-600">Request ID</p>
@@ -167,10 +165,10 @@ function UserDetailsModal({ isOpen, onClose, request, isAnimating }) {
           </div>
 
           {/* Footer */}
-          <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200">
+          <div className="flex justify-end gap-3 px-6 py-4 border-t-2 border-gray-400 bg-gray-100">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+              className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border-2 border-gray-400 hover:bg-gray-200 focus:outline-none transition-colors duration-200"
             >
               Close
             </button>
