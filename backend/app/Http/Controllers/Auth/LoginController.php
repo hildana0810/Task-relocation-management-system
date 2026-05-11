@@ -127,6 +127,23 @@ class LoginController extends Controller
     }
 
     /**
+     * Get Tax Collector profile.
+     */
+    public function getTaxCollectorProfile(Request $request)
+    {
+        $user = $request->user();
+        
+        // Verify user is a tax collector
+        if ($user->role !== 'tax_collector') {
+            return response()->json([
+                'message' => 'Access denied. User is not a tax collector.'
+            ], 403);
+        }
+        
+        return response()->json($user, 200);
+    }
+
+    /**
      * Log the user out of the application.
      */
     public function logout(Request $request)

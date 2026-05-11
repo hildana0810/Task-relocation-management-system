@@ -14,13 +14,6 @@ function TaxCollectorDashboard() {
   });
 
   useEffect(() => {
-    // Debug: Check what's in localStorage on mount
-    console.log('=== DEBUGGING LOCAL STORAGE ===');
-    const userStorage = localStorage.getItem('user');
-    const taxCollectorStorage = localStorage.getItem('tax_collector');
-    console.log('localStorage user:', userStorage);
-    console.log('localStorage tax_collector:', taxCollectorStorage);
-
     // Fetch tax collector stats and profile
     const fetchData = async () => {
       try {
@@ -110,7 +103,13 @@ function TaxCollectorDashboard() {
                   </div>
                   <div>
                     <h1 className="text-3xl font-bold mb-1">
-                      Welcome back, {taxCollectorData?.name || taxCollectorData?.firstName || taxCollectorData?.username || 'Tax Collector'}
+                      {taxCollectorData ? (
+                        `Welcome back, ${taxCollectorData.name || taxCollectorData.firstName || taxCollectorData.username}`
+                      ) : (
+                        <div className="animate-pulse">
+                          <div className="h-8 bg-white/20 rounded w-48"></div>
+                        </div>
+                      )}
                     </h1>
                     <p className="text-blue-100 text-sm">Tax Collector Dashboard</p>
                   </div>
