@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Models\RelocationRequest;
 
 class LoginController extends Controller
 {
@@ -124,6 +125,52 @@ class LoginController extends Controller
             'newAssignments' => 0,
             'pendingReviews' => 0
         ]);
+    }
+
+    /**
+     * Get Tax Collector profile.
+     */
+    public function getTaxCollectorProfile(Request $request)
+    {
+        $user = $request->user();
+        
+        // Verify user is a tax collector
+        if ($user->role !== 'tax_collector') {
+            return response()->json([
+                'message' => 'Access denied. User is not a tax collector.'
+            ], 403);
+        }
+        
+        return response()->json($user, 200);
+    }
+
+    /**
+     * Get assigned relocation requests for the tax collector.
+     */
+    public function getAssignedRelocationRequests(Request $request)
+    {
+        $user = $request->user();
+        
+        // Verify user is a tax collector
+        if ($user->role !== 'tax_collector') {
+            return response()->json([
+                'message' => 'Access denied. User is not a tax collector.'
+            ], 403);
+        }
+        
+        // Get relocation requests assigned to this tax collector OR unassigned pending requests
+        $assignedRequests = RelocationRequest::where(function($query) use ($user) {
+                $query->where('tax_collector_id', $user->id)
+                      ->orWhere(function($subQuery) {
+                          $subQuery->where('tax_collector_id', null)
+                                   ->where('status', 'pending');
+                      });
+            })
+            ->with('user') // Load the user who created the request
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        return response()->json($assignedRequests, 200);
     }
 
     /**
