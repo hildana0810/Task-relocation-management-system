@@ -14,29 +14,83 @@ function TaxCollectorDashboard() {
   });
 
   useEffect(() => {
-    // Get tax collector data from localStorage
-    const storedData = localStorage.getItem('tax_collector');
-    if (storedData) {
-      setTaxCollectorData(JSON.parse(storedData));
-    }
-  }, []);
+    // Debug: Check what's in localStorage on mount
+    console.log('=== DEBUGGING LOCAL STORAGE ===');
+    const userStorage = localStorage.getItem('user');
+    const taxCollectorStorage = localStorage.getItem('tax_collector');
+    console.log('localStorage user:', userStorage);
+    console.log('localStorage tax_collector:', taxCollectorStorage);
 
-  useEffect(() => {
-    // Fetch tax collector stats
-    const fetchStats = async () => {
+    // Fetch tax collector stats and profile
+    const fetchData = async () => {
       try {
+        // Fetch tax collector stats
         console.log('Fetching tax collector stats...');
-        const response = await api.get('/tax-collector/stats');
-        console.log('Stats response:', response.data);
-        setStats(response.data);
+        const statsResponse = await api.get('/tax-collector/stats');
+        console.log('Stats response:', statsResponse.data);
+        setStats(statsResponse.data);
+
+        // Try to fetch tax collector profile from users table
+        try {
+          console.log('Fetching tax collector profile...');
+          const profileResponse = await api.get('/tax-collector/profile');
+          console.log('Profile response:', profileResponse.data);
+          setTaxCollectorData(profileResponse.data);
+        } catch (profileError) {
+          console.log('Profile API failed, trying to fetch by user ID...');
+
+          // Get user data from localStorage to get the ID
+          const userData = localStorage.getItem('user');
+          const taxCollectorData = localStorage.getItem('tax_collector');
+
+          let userId = null;
+          let fallbackData = null;
+
+          if (userData) {
+            const parsedUser = JSON.parse(userData);
+            userId = parsedUser.id;
+            fallbackData = parsedUser;
+            console.log('Found user ID from localStorage:', userId);
+          } else if (taxCollectorData) {
+            const parsedTaxCollector = JSON.parse(taxCollectorData);
+            userId = parsedTaxCollector.id;
+            fallbackData = parsedTaxCollector;
+            console.log('Found tax collector ID from localStorage:', userId);
+          }
+
+          if (userId) {
+            try {
+              // Fetch user details by ID
+              console.log('Fetching user by ID:', userId);
+              const userResponse = await api.get(`/users/${userId}`);
+              console.log('User by ID response:', userResponse.data);
+              setTaxCollectorData(userResponse.data);
+            } catch (userByIdError) {
+              console.log('Failed to fetch user by ID, using fallback data');
+              setTaxCollectorData(fallbackData);
+            }
+          } else {
+            // Try alternative endpoint without ID
+            try {
+              const userResponse = await api.get('/user');
+              console.log('User response:', userResponse.data);
+              setTaxCollectorData(userResponse.data);
+            } catch (userError) {
+              console.log('All profile fetch attempts failed');
+              if (fallbackData) {
+                setTaxCollectorData(fallbackData);
+              }
+            }
+          }
+        }
       } catch (error) {
         console.log('Error fetching stats:', error);
         console.log('No stats available, showing 0');
         // Keep default 0 values when no data is available
       }
     };
-    
-    fetchStats();
+
+    fetchData();
   }, []);
 
   const renderContent = () => {
@@ -45,9 +99,37 @@ function TaxCollectorDashboard() {
         return (
           <div>
             {/* Welcome Section */}
-            <div className="bg-gradient-to-r from-blue-500 to-green-500 text-white p-6 rounded-lg mb-6">
-              <h1 className="text-2xl font-bold mb-2">Welcome Tax Collector</h1>
-              <p className="text-lg">Region: Arusha</p>
+            <div className="bg-gradient-to-r from-blue-600 via-blue-500 to-green-500 text-white p-8 rounded-xl shadow-lg mb-8 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
+              <div className="relative z-10">
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mr-4">
+                    <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h1 className="text-3xl font-bold mb-1">
+                      Welcome back, {taxCollectorData?.name || taxCollectorData?.firstName || taxCollectorData?.username || 'Tax Collector'}
+                    </h1>
+                    <p className="text-blue-100 text-sm">Tax Collector Dashboard</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                    <p className="text-blue-100 text-xs uppercase tracking-wide mb-1">Region</p>
+                    <p className="text-lg font-semibold">Arusha</p>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                    <p className="text-blue-100 text-xs uppercase tracking-wide mb-1">Status</p>
+                    <p className="text-lg font-semibold">Active</p>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                    <p className="text-blue-100 text-xs uppercase tracking-wide mb-1">Department</p>
+                    <p className="text-lg font-semibold">Revenue</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* New Client Notification */}
@@ -73,7 +155,7 @@ function TaxCollectorDashboard() {
             <MyTaxpayersTable />
           </div>
         );
-      
+
       case 'taxpayers':
         return (
           <div>
@@ -81,7 +163,7 @@ function TaxCollectorDashboard() {
             <MyTaxpayersTable />
           </div>
         );
-      
+
       case 'notifications':
         return (
           <div>
@@ -109,7 +191,7 @@ function TaxCollectorDashboard() {
             </div>
           </div>
         );
-      
+
       default:
         return null;
     }
