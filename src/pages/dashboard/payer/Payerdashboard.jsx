@@ -25,6 +25,8 @@ function Payerdashboard() {
     { id: 3, message: "Your relocation request has been approved.", time: "3 days ago", read: true }
   ]);
 
+  const [userLoading, setUserLoading] = useState(true);
+
   // Load user data from localStorage on component mount
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -63,6 +65,8 @@ function Payerdashboard() {
       });
     } catch (error) {
       console.error('Error fetching user data:', error);
+    } finally {
+      setUserLoading(false);
     }
   };
 
@@ -199,10 +203,20 @@ function Payerdashboard() {
                 </svg>
               </button>
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
-                  {userData.businessName.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2)}
-                </div>
-                <span className="text-sm font-medium text-gray-700">{userData.businessName}</span>
+                {userLoading ? (
+                  <div className="w-8 h-8 bg-gray-300 rounded-full animate-pulse"></div>
+                ) : (
+                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+                    {userData.businessName.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2)}
+                  </div>
+                )}
+                <span className="text-sm font-medium text-gray-700">
+                  {userLoading ? (
+                    <div className="h-4 bg-gray-300 rounded w-24 animate-pulse"></div>
+                  ) : (
+                    userData.businessName
+                  )}
+                </span>
               </div>
               <button
                 onClick={handleLogout}
@@ -220,29 +234,55 @@ function Payerdashboard() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-lg p-6 mb-8 text-white">
-          <h2 className="text-2xl font-bold mb-4">Welcome, {userData.businessName}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-              <p className="text-blue-100 text-sm">Business Name</p>
-              <p className="font-semibold">{userData.businessName}</p>
-            </div>
-            <div>
-              <p className="text-blue-100 text-sm">TIN Number</p>
-              <p className="font-semibold">{userData.tinNumber}</p>
-            </div>
-            <div>
-              <p className="text-blue-100 text-sm">Current Address</p>
-              <p className="font-semibold">{userData.currentAddress}</p>
-            </div>
-            <div>
-              <p className="text-blue-100 text-sm">Account Status</p>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                {userData.accountStatus}
-              </span>
+        {userLoading ? (
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-lg p-6 mb-8">
+            <div className="animate-pulse">
+              <div className="h-8 bg-blue-400 rounded w-64 mb-4"></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <div className="h-4 bg-blue-300 rounded w-20 mb-2"></div>
+                  <div className="h-6 bg-blue-400 rounded w-32"></div>
+                </div>
+                <div>
+                  <div className="h-4 bg-blue-300 rounded w-16 mb-2"></div>
+                  <div className="h-6 bg-blue-400 rounded w-24"></div>
+                </div>
+                <div>
+                  <div className="h-4 bg-blue-300 rounded w-20 mb-2"></div>
+                  <div className="h-6 bg-blue-400 rounded w-40"></div>
+                </div>
+                <div>
+                  <div className="h-4 bg-blue-300 rounded w-20 mb-2"></div>
+                  <div className="h-6 bg-blue-400 rounded w-16"></div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-lg p-6 mb-8 text-white">
+            <h2 className="text-2xl font-bold mb-4">Welcome, {userData.businessName}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <p className="text-blue-100 text-sm">Business Name</p>
+                <p className="font-semibold">{userData.businessName}</p>
+              </div>
+              <div>
+                <p className="text-blue-100 text-sm">TIN Number</p>
+                <p className="font-semibold">{userData.tinNumber}</p>
+              </div>
+              <div>
+                <p className="text-blue-100 text-sm">Current Address</p>
+                <p className="font-semibold">{userData.currentAddress}</p>
+              </div>
+              <div>
+                <p className="text-blue-100 text-sm">Account Status</p>
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  {userData.accountStatus}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
@@ -485,26 +525,51 @@ function Payerdashboard() {
                 <h3 className="text-lg font-semibold text-gray-900">Business Profile</h3>
               </div>
               <div className="p-6 space-y-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Business Name</p>
-                  <p className="text-gray-900">{userData.businessName}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">TIN</p>
-                  <p className="text-gray-900">{userData.tinNumber}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Registered Address</p>
-                  <p className="text-gray-900">{userData.currentAddress}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Contact Info</p>
-                  <p className="text-gray-900">{userData.phoneNumber || '+254 712 345 678'}</p>
-                  <p className="text-gray-900">{userData.email || 'john@enterprises.com'}</p>
-                </div>
-                <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
-                  Update Profile
-                </button>
+                {userLoading ? (
+                  <div className="space-y-4 animate-pulse">
+                    <div>
+                      <div className="h-4 bg-gray-300 rounded w-24 mb-2"></div>
+                      <div className="h-5 bg-gray-400 rounded w-32"></div>
+                    </div>
+                    <div>
+                      <div className="h-4 bg-gray-300 rounded w-12 mb-2"></div>
+                      <div className="h-5 bg-gray-400 rounded w-28"></div>
+                    </div>
+                    <div>
+                      <div className="h-4 bg-gray-300 rounded w-28 mb-2"></div>
+                      <div className="h-5 bg-gray-400 rounded w-40"></div>
+                    </div>
+                    <div>
+                      <div className="h-4 bg-gray-300 rounded w-20 mb-2"></div>
+                      <div className="h-5 bg-gray-400 rounded w-32 mb-1"></div>
+                      <div className="h-5 bg-gray-400 rounded w-36"></div>
+                    </div>
+                    <div className="h-10 bg-gray-300 rounded w-full"></div>
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Business Name</p>
+                      <p className="text-gray-900">{userData.businessName}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">TIN</p>
+                      <p className="text-gray-900">{userData.tinNumber}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Registered Address</p>
+                      <p className="text-gray-900">{userData.currentAddress}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Contact Info</p>
+                      <p className="text-gray-900">{userData.phoneNumber || '+254 712 345 678'}</p>
+                      <p className="text-gray-900">{userData.email || 'john@enterprises.com'}</p>
+                    </div>
+                    <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
+                      Update Profile
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 
@@ -562,17 +627,33 @@ function Payerdashboard() {
                 <h3 className="text-lg font-semibold text-gray-900">Compliance Status</h3>
               </div>
               <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm font-medium text-gray-500">Current Status</span>
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getComplianceBadge(userData.complianceStatus)}`}>
-                    {userData.complianceStatus}
-                  </span>
-                </div>
-                <div className="space-y-2 text-sm text-gray-600">
-                  <p>• All tax returns filed on time</p>
-                  <p>• No pending compliance issues</p>
-                  <p>• Last audit: March 2023</p>
-                </div>
+                {userLoading ? (
+                  <div className="animate-pulse">
+                    <div className="flex justify-between mb-4">
+                      <div className="h-4 bg-gray-300 rounded w-24"></div>
+                      <div className="h-6 bg-gray-400 rounded w-20"></div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-4 bg-gray-300 rounded w-full"></div>
+                      <div className="h-4 bg-gray-300 rounded w-full"></div>
+                      <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-sm font-medium text-gray-500">Current Status</span>
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getComplianceBadge(userData.complianceStatus)}`}>
+                        {userData.complianceStatus}
+                      </span>
+                    </div>
+                    <div className="space-y-2 text-sm text-gray-600">
+                      <p>• All tax returns filed on time</p>
+                      <p>• No pending compliance issues</p>
+                      <p>• Last audit: March 2023</p>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
