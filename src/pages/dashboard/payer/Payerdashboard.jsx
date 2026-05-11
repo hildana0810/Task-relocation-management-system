@@ -31,20 +31,12 @@ function Payerdashboard() {
     if (storedUser) {
       try {
         const user = JSON.parse(storedUser);
-        setUserData({
-          businessName: user.name || "John Enterprises",
-          tinNumber: user.tinnumber || "TIN-123456789",
-          currentAddress: user.location || "123 Main Street, Nairobi, 00100",
-          accountStatus: user.accountStatus || "Active",
-          complianceStatus: user.complianceStatus || "Compliant",
-          phoneNumber: user.phone || "+254 712 345 678",
-          email: user.email || "john@enterprises.com"
-        });
         // Clear any existing localStorage request data
         localStorage.removeItem('userStats');
         localStorage.removeItem('userRequests');
 
         // Fetch real data from database
+        fetchUserData();
         fetchUserRequests();
       } catch (error) {
         console.error('Error parsing user data:', error);
@@ -54,6 +46,25 @@ function Payerdashboard() {
       navigate('/login');
     }
   }, [navigate]);
+
+  // Fetch user data from database
+  const fetchUserData = async () => {
+    try {
+      const response = await api.get('/user');
+      const user = response.data;
+      setUserData({
+        businessName: user.business_name || user.name || "John Enterprises",
+        tinNumber: user.tinnumber || "TIN-123456789",
+        currentAddress: user.location || "123 Main Street, Nairobi, 00100",
+        accountStatus: user.accountStatus || "Active",
+        complianceStatus: user.complianceStatus || "Compliant",
+        phoneNumber: user.phone || "+254 712 345 678",
+        email: user.email || "john@enterprises.com"
+      });
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    }
+  };
 
   // Fetch user requests from database
   const fetchUserRequests = async () => {
