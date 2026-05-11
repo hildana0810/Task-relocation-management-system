@@ -1,17 +1,31 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import TaxCollectorSidebar from '../../../components/TaxCollectorSidebar';
 import NewClientNotification from '../../../components/NewClientNotification';
-import MyTaxpayersTable from '../../../components/MyTaxpayersTable';
+import AssignedRelocationRequests from '../../../components/AssignedRelocationRequests';
 import api from '../../../utils/api';
 
 function TaxCollectorDashboard() {
+  const location = useLocation();
   const [taxCollectorData, setTaxCollectorData] = useState(null);
   const [activeSection, setActiveSection] = useState('dashboard');
   const [stats, setStats] = useState({
-    totalTaxpayers: 0,
-    newAssignments: 0,
-    pendingReviews: 0
+    totalRequests: 0,
+    pendingRequests: 0,
+    approvedRequests: 0
   });
+
+  // Set activeSection based on URL path
+  useEffect(() => {
+    const path = location.pathname;
+    if (path === '/tax-collector-dashboard/taxpayers') {
+      setActiveSection('taxpayers');
+    } else if (path === '/tax-collector-dashboard/notifications') {
+      setActiveSection('notifications');
+    } else {
+      setActiveSection('dashboard');
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     // Fetch tax collector stats and profile
@@ -30,50 +44,15 @@ function TaxCollectorDashboard() {
           console.log('Profile response:', profileResponse.data);
           setTaxCollectorData(profileResponse.data);
         } catch (profileError) {
-          console.log('Profile API failed, trying to fetch by user ID...');
+          console.log('Profile API failed, trying alternative endpoint...');
 
-          // Get user data from localStorage to get the ID
-          const userData = localStorage.getItem('user');
-          const taxCollectorData = localStorage.getItem('tax_collector');
-
-          let userId = null;
-          let fallbackData = null;
-
-          if (userData) {
-            const parsedUser = JSON.parse(userData);
-            userId = parsedUser.id;
-            fallbackData = parsedUser;
-            console.log('Found user ID from localStorage:', userId);
-          } else if (taxCollectorData) {
-            const parsedTaxCollector = JSON.parse(taxCollectorData);
-            userId = parsedTaxCollector.id;
-            fallbackData = parsedTaxCollector;
-            console.log('Found tax collector ID from localStorage:', userId);
-          }
-
-          if (userId) {
-            try {
-              // Fetch user details by ID
-              console.log('Fetching user by ID:', userId);
-              const userResponse = await api.get(`/users/${userId}`);
-              console.log('User by ID response:', userResponse.data);
-              setTaxCollectorData(userResponse.data);
-            } catch (userByIdError) {
-              console.log('Failed to fetch user by ID, using fallback data');
-              setTaxCollectorData(fallbackData);
-            }
-          } else {
-            // Try alternative endpoint without ID
-            try {
-              const userResponse = await api.get('/user');
-              console.log('User response:', userResponse.data);
-              setTaxCollectorData(userResponse.data);
-            } catch (userError) {
-              console.log('All profile fetch attempts failed');
-              if (fallbackData) {
-                setTaxCollectorData(fallbackData);
-              }
-            }
+          // Try alternative endpoint without ID
+          try {
+            const userResponse = await api.get('/user');
+            console.log('User response:', userResponse.data);
+            setTaxCollectorData(userResponse.data);
+          } catch (userError) {
+            console.log('All profile fetch attempts failed');
           }
         }
       } catch (error) {
@@ -134,32 +113,16 @@ function TaxCollectorDashboard() {
             {/* New Client Notification */}
             <NewClientNotification />
 
-            {/* My Taxpayers Summary */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <h3 className="text-lg font-semibold text-gray-700 mb-2">Total Taxpayers</h3>
-                <p className="text-3xl font-bold text-blue-600">{stats.totalTaxpayers}</p>
-              </div>
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <h3 className="text-lg font-semibold text-gray-700 mb-2">New Assignments</h3>
-                <p className="text-3xl font-bold text-green-600">{stats.newAssignments}</p>
-              </div>
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <h3 className="text-lg font-semibold text-gray-700 mb-2">Pending Reviews</h3>
-                <p className="text-3xl font-bold text-yellow-600">{stats.pendingReviews}</p>
-              </div>
-            </div>
-
-            {/* Recent Taxpayers Table */}
-            <MyTaxpayersTable />
+            {/* Assigned Relocation Requests */}
+            <AssignedRelocationRequests />
           </div>
         );
 
       case 'taxpayers':
         return (
           <div>
-            <h2 className="text-2xl font-bold mb-6">My Taxpayers</h2>
-            <MyTaxpayersTable />
+            <h2 className="text-2xl font-bold mb-6">Assigned Relocation Requests</h2>
+            <AssignedRelocationRequests />
           </div>
         );
 

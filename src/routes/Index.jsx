@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Register from '../pages/auth/Register/Register';
 import Login from '../pages/auth/login/Login';
 import Payerdashboard from '../pages/dashboard/payer/Payerdashboard';
-import TaxCollectorDashboard from '../pages/dashboard/taxCollector/TaxCollectorDashboard';
+import TaxCollectorDashboard from '../pages/dashboard/taxcollector/TaxCollectorDashboard';
 import AdminDashboard from '../pages/dashboard/admin/AdminDashboard';
 import RelocationRequests from '../pages/dashboard/admin/components/RelocationRequests';
 import VerifyRequest from '../pages/dashboard/admin/components/VerifyRequest';
@@ -30,6 +30,12 @@ export default function Index() {
           element={<Payerdashboard />} />
         <Route
           path="/tax-collector-dashboard"
+          element={<TaxCollectorDashboard />} />
+        <Route
+          path="/tax-collector-dashboard/taxpayers"
+          element={<TaxCollectorDashboard />} />
+        <Route
+          path="/tax-collector-dashboard/notifications"
           element={<TaxCollectorDashboard />} />
         <Route
           path="/admin/dashboard"
