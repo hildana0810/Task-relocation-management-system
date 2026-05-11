@@ -28,7 +28,7 @@ function TaxCollectors() {
   const checkAuth = () => {
     const token = localStorage.getItem('auth_token');
     const role = localStorage.getItem('user_role');
-    
+
     if (!token || role !== 'admin') {
       navigate('/admin/login');
     }
@@ -39,7 +39,7 @@ function TaxCollectors() {
       const response = await api.get('/admin/tax-collectors');
       console.log('API Response:', response);
       console.log('Response data:', response.data);
-      
+
       // If API returns empty array, use dummy data for demo
       if (response.data && response.data.length === 0) {
         console.log('API returned empty array, using dummy data');
@@ -139,14 +139,15 @@ function TaxCollectors() {
   };
 
   const filteredCollectors = taxCollectors.filter(collector => {
-    const matchesFilter = filter === 'all' || collector.status === filter;
-    const matchesSearch = collector.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         collector.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         collector.region.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filter === 'all' || (collector.status && collector.status === filter);
+    const matchesSearch = (collector.name && collector.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (collector.email && collector.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (collector.region && collector.region.toLowerCase().includes(searchTerm.toLowerCase()));
     return matchesFilter && matchesSearch;
   });
 
   const getStatusColor = (status) => {
+    if (!status) return 'bg-gray-100 text-gray-800';
     switch (status) {
       case 'active':
         return 'bg-green-100 text-green-800';
@@ -183,11 +184,11 @@ function TaxCollectors() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
       console.log('Submitting form data:', formData);
       console.log('Editing collector:', editingCollector);
-      
+
       if (editingCollector) {
         console.log('Making PUT request to:', `/admin/tax-collectors/${editingCollector.id}`);
         const response = await api.put(`/admin/tax-collectors/${editingCollector.id}`, formData);
@@ -199,7 +200,7 @@ function TaxCollectors() {
         console.log('POST response:', response);
         setSuccessMessage('Tax collector added successfully!');
       }
-      
+
       setShowAddModal(false);
       fetchTaxCollectors();
       setTimeout(() => setSuccessMessage(''), 3000);
@@ -211,8 +212,9 @@ function TaxCollectors() {
   };
 
   const handleToggleStatus = async (collectorId, currentStatus) => {
+    if (!currentStatus) return;
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-    
+
     try {
       await api.put(`/admin/tax-collectors/${collectorId}`, { status: newStatus });
       fetchTaxCollectors();
@@ -235,7 +237,7 @@ function TaxCollectors() {
   return (
     <div className="min-h-screen bg-gray-100 flex">
       <AdminSidebar />
-      
+
       <div className="flex-1 p-8">
         <div className="flex justify-between items-center mb-8">
           <div>
@@ -318,24 +320,24 @@ function TaxCollectors() {
                 {filteredCollectors.map((collector) => (
                   <tr key={collector.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{collector.name}</div>
+                      <div className="text-sm font-medium text-gray-900">{collector.name || 'N/A'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <div className="text-sm text-gray-900">{collector.email}</div>
-                        <div className="text-sm text-gray-500">{collector.phone}</div>
+                        <div className="text-sm text-gray-900">{collector.email || 'N/A'}</div>
+                        <div className="text-sm text-gray-500">{collector.phone || 'N/A'}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {collector.region}
+                      {collector.region || 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(collector.status)}`}>
-                        {collector.status.charAt(0).toUpperCase() + collector.status.slice(1)}
+                        {collector.status ? collector.status.charAt(0).toUpperCase() + collector.status.slice(1) : 'Unknown'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {collector.assigned_requests}
+                      {collector.assigned_requests || 0}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
@@ -348,7 +350,7 @@ function TaxCollectors() {
                         onClick={() => handleToggleStatus(collector.id, collector.status)}
                         className={`${collector.status === 'active' ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'}`}
                       >
-                        {collector.status === 'active' ? 'Deactivate' : 'Activate'}
+                        {collector.status ? (collector.status === 'active' ? 'Deactivate' : 'Activate') : 'N/A'}
                       </button>
                     </td>
                   </tr>
@@ -356,7 +358,7 @@ function TaxCollectors() {
               </tbody>
             </table>
           </div>
-          
+
           {filteredCollectors.length === 0 && (
             <div className="text-center py-12">
               <div className="text-gray-500">
@@ -373,16 +375,16 @@ function TaxCollectors() {
         {showAddModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             {successMessage && (
-          <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
-            {successMessage}
-          </div>
-          )}
+              <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+                {successMessage}
+              </div>
+            )}
 
-        <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">
                 {editingCollector ? 'Edit Tax Collector' : 'Add New Tax Collector'}
               </h2>
-              
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
@@ -390,39 +392,39 @@ function TaxCollectors() {
                     type="text"
                     required
                     value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                   <input
                     type="email"
                     required
                     value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
                   <input
                     type="tel"
                     required
                     value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Region</label>
                   <select
                     required
                     value={formData.region}
-                    onChange={(e) => setFormData({...formData, region: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, region: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                   >
                     <option value="">Select Region</option>
@@ -436,19 +438,19 @@ function TaxCollectors() {
                     <option value="Kilimanjaro">Kilimanjaro</option>
                   </select>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                   <select
                     value={formData.status}
-                    onChange={(e) => setFormData({...formData, status: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                   >
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
                   </select>
                 </div>
-                
+
                 <div className="flex space-x-3 pt-4">
                   <button
                     type="submit"
