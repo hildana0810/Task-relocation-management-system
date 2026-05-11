@@ -58,7 +58,7 @@ class AdminController extends Controller
      */
     public function getRelocationRequests()
     {
-        $requests = RelocationRequest::with('user')->get();
+        $requests = RelocationRequest::with(['user', 'taxCollector'])->get();
         return response()->json($requests);
     }
 
