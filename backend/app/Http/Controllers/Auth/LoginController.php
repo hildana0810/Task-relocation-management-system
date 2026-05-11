@@ -158,8 +158,14 @@ class LoginController extends Controller
             ], 403);
         }
         
-        // Get relocation requests assigned to this tax collector
-        $assignedRequests = RelocationRequest::where('tax_collector_id', $user->id)
+        // Get relocation requests assigned to this tax collector OR unassigned pending requests
+        $assignedRequests = RelocationRequest::where(function($query) use ($user) {
+                $query->where('tax_collector_id', $user->id)
+                      ->orWhere(function($subQuery) {
+                          $subQuery->where('tax_collector_id', null)
+                                   ->where('status', 'pending');
+                      });
+            })
             ->with('user') // Load the user who created the request
             ->orderBy('created_at', 'desc')
             ->get();
