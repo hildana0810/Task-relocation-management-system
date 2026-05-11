@@ -20,11 +20,8 @@ class RelocationRequestController extends Controller
             'current_postcode' => 'required|string|max:20',
             'new_address' => 'required|string',
             'new_postcode' => 'required|string|max:20',
-            'relocation_date' => 'required|date|after:today',
+            'relocation_date' => 'required|date|after_or_equal:today',
             'reason_for_relocation' => 'required|string',
-            'contact_person' => 'required|string|max:255',
-            'contact_phone' => 'required|string|max:20',
-            'contact_email' => 'required|email|max:255',
             'additional_info' => 'nullable|string',
         ]);
 
@@ -38,9 +35,9 @@ class RelocationRequestController extends Controller
             'new_postcode' => $request->new_postcode,
             'relocation_date' => $request->relocation_date,
             'reason_for_relocation' => $request->reason_for_relocation,
-            'contact_person' => $request->contact_person,
-            'contact_phone' => $request->contact_phone,
-            'contact_email' => $request->contact_email,
+            'contact_person' => 'N/A',
+            'contact_phone' => 'N/A',
+            'contact_email' => 'N/A',
             'additional_info' => $request->additional_info,
             'status' => 'pending',
         ]);
