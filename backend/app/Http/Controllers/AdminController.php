@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Admin;
 use App\Models\User;
 use App\Models\RelocationRequest;
-use App\Models\TaxCollector;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -50,7 +49,7 @@ class AdminController extends Controller
             'totalUsers' => User::count(),
             'totalRequests' => RelocationRequest::count(),
             'pendingRequests' => RelocationRequest::where('status', 'pending')->count(),
-            'taxCollectors' => TaxCollector::where('status', 'active')->count(),
+            'taxCollectors' => User::where('role', 'tax_collector')->count(),
         ]);
     }
 
@@ -59,7 +58,7 @@ class AdminController extends Controller
      */
     public function getRelocationRequests()
     {
-        $requests = RelocationRequest::with('user')->get();
+        $requests = RelocationRequest::with(['user', 'taxCollector'])->get();
         return response()->json($requests);
     }
 
@@ -81,7 +80,7 @@ class AdminController extends Controller
     public function approveRequest(Request $request, $id)
     {
         $request->validate([
-            'tax_collector_id' => 'required|exists:tax_collectors,id',
+            'tax_collector_id' => 'required|exists:users,id,role,tax_collector',
         ]);
 
         $relocationRequest = RelocationRequest::find($id);
@@ -121,7 +120,9 @@ class AdminController extends Controller
      */
     public function getTaxCollectors()
     {
-        $taxCollectors = TaxCollector::all();
+        $taxCollectors = User::where('role', 'tax_collector')
+                            ->select('id', 'name', 'location as region', 'email')
+                            ->get();
         return response()->json($taxCollectors);
     }
 
@@ -132,13 +133,19 @@ class AdminController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:tax_collectors,email',
-            'phone' => 'required|string|max:20',
+            'email' => 'required|email|unique:users,email',
             'region' => 'required|string|max:255',
-            'status' => 'required|in:active,inactive',
+            'password' => 'required|string|min:6',
         ]);
 
-        $taxCollector = TaxCollector::create($request->all());
+        $taxCollector = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'location' => $request->region,
+            'role' => 'tax_collector',
+            'password' => Hash::make($request->password),
+        ]);
+
         return response()->json($taxCollector);
     }
 
@@ -147,12 +154,22 @@ class AdminController extends Controller
      */
     public function updateTaxCollector(Request $request, $id)
     {
-        $taxCollector = TaxCollector::find($id);
+        $taxCollector = User::where('role', 'tax_collector')->find($id);
         if (!$taxCollector) {
             return response()->json(['message' => 'Tax collector not found'], 404);
         }
 
-        $taxCollector->update($request->all());
+        $updateData = $request->all();
+        if (isset($updateData['region'])) {
+            $updateData['location'] = $updateData['region'];
+            unset($updateData['region']);
+        }
+        
+        if (isset($updateData['password'])) {
+            $updateData['password'] = Hash::make($updateData['password']);
+        }
+
+        $taxCollector->update($updateData);
         return response()->json($taxCollector);
     }
 

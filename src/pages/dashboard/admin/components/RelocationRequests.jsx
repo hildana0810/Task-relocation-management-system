@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AdminSidebar from '../../../components/AdminSidebar';
-import api from '../../../utils/api';
+import AdminSidebar from '../../../../components/AdminSidebar';
+import api from '../../../../utils/api';
 
 function RelocationRequests() {
   const [requests, setRequests] = useState([]);
@@ -177,7 +177,7 @@ function RelocationRequests() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {request.tax_collector || 'Not assigned'}
+                      {request.tax_collector?.name || 'Not assigned'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(request.created_at).toLocaleDateString()}

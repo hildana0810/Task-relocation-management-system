@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AdminSidebar from '../../../components/AdminSidebar';
-import api from '../../../utils/api';
+import AdminSidebar from '../../../../components/AdminSidebar';
+import api from '../../../../utils/api';
 
 function Users() {
   const [users, setUsers] = useState([]);

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../utils/api';
 
-function RelocationRequestForm({ isOpen, onClose, onSubmit }) {
+function RelocationRequestForm({ isOpen, onClose, onSubmit, userData }) {
   const [formData, setFormData] = useState({
     businessName: '',
     tinNumber: '',
@@ -17,6 +17,20 @@ function RelocationRequestForm({ isOpen, onClose, onSubmit }) {
     additionalInfo: ''
   });
 
+  // Auto-populate user data when component mounts or userData changes
+  useEffect(() => {
+    if (userData) {
+      setFormData(prev => ({
+        ...prev,
+        businessName: userData.businessName || '',
+        tinNumber: userData.tinNumber || '',
+        currentAddress: userData.currentAddress || '',
+        contactPhone: userData.phoneNumber || '',
+        contactEmail: userData.email || ''
+      }));
+    }
+  }, [userData]);
+
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -24,7 +38,7 @@ function RelocationRequestForm({ isOpen, onClose, onSubmit }) {
     const newErrors = {};
 
     if (!formData.businessName.trim()) newErrors.businessName = 'Business name is required';
-    if (!formData.tinNumber.trim()) newErrors.tinNumber = 'TIN number is required';
+    // TIN number is auto-populated and disabled, so no validation needed
     if (!formData.currentAddress.trim()) newErrors.currentAddress = 'Current address is required';
     if (!formData.currentPostcode.trim()) newErrors.currentPostcode = 'Current postcode is required';
     if (!formData.newAddress.trim()) newErrors.newAddress = 'New address is required';
@@ -173,14 +187,11 @@ function RelocationRequestForm({ isOpen, onClose, onSubmit }) {
                   type="text"
                   name="tinNumber"
                   value={formData.tinNumber}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.tinNumber ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                  placeholder="Enter TIN number"
+                  disabled
+                  className="w-full px-3 py-2 border rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed opacity-60"
+                  placeholder="Auto-populated from your profile"
                 />
-                {errors.tinNumber && (
-                  <p className="mt-1 text-sm text-red-600">{errors.tinNumber}</p>
-                )}
+                <p className="mt-1 text-xs text-gray-500">TIN number is automatically fetched from your profile</p>
               </div>
             </div>
           </div>

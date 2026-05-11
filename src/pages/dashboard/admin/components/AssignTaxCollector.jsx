@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import AdminSidebar from '../../../components/AdminSidebar';
-import api from '../../../utils/api';
+import AdminSidebar from '../../../../components/AdminSidebar';
+import api from '../../../../utils/api';
 
 function AssignTaxCollector() {
   const { requestId } = useParams();
@@ -23,7 +23,7 @@ function AssignTaxCollector() {
   const checkAuth = () => {
     const token = localStorage.getItem('auth_token');
     const role = localStorage.getItem('user_role');
-    
+
     if (!token || role !== 'admin') {
       navigate('/admin/login');
     }
@@ -36,23 +36,7 @@ function AssignTaxCollector() {
       setRequests(pendingRequests);
     } catch (error) {
       console.error('Error fetching requests:', error);
-      // Set dummy data for demo
-      setRequests([
-        {
-          id: 1,
-          user_name: 'John Doe',
-          business_name: 'John Electronics',
-          new_address: '456 New Road, Arusha',
-          status: 'pending'
-        },
-        {
-          id: 3,
-          user_name: 'Robert Brown',
-          business_name: 'Brown Restaurant',
-          new_address: '999 Maple Dr, Mbeya',
-          status: 'pending'
-        }
-      ]);
+      setRequests([]);
     } finally {
       setLoading(false);
     }
@@ -64,13 +48,7 @@ function AssignTaxCollector() {
       setTaxCollectors(response.data);
     } catch (error) {
       console.error('Error fetching tax collectors:', error);
-      // Set dummy data for demo
-      setTaxCollectors([
-        { id: 1, name: 'Michael Johnson', region: 'Dar es Salaam' },
-        { id: 2, name: 'Sarah Williams', region: 'Arusha' },
-        { id: 3, name: 'David Brown', region: 'Mwanza' },
-        { id: 4, name: 'Emily Davis', region: 'Dodoma' }
-      ]);
+      setTaxCollectors([]);
     }
   };
 
@@ -87,7 +65,7 @@ function AssignTaxCollector() {
       await api.post(`/admin/relocation-requests/${selectedRequest.id}/approve`, {
         tax_collector_id: selectedTaxCollector
       });
-      
+
       setMessage('Tax collector assigned successfully!');
       setTimeout(() => {
         navigate('/admin/relocation-requests');
@@ -114,7 +92,7 @@ function AssignTaxCollector() {
   return (
     <div className="min-h-screen bg-gray-100 flex">
       <AdminSidebar />
-      
+
       <div className="flex-1 p-8">
         <div className="flex justify-between items-center mb-8">
           <div>
@@ -144,11 +122,10 @@ function AssignTaxCollector() {
                 <div
                   key={request.id}
                   onClick={() => setSelectedRequest(request)}
-                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                    selectedRequest?.id === request.id
-                      ? 'border-red-500 bg-red-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
+                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${selectedRequest?.id === request.id
+                    ? 'border-red-500 bg-red-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                    }`}
                 >
                   <div className="flex justify-between items-start">
                     <div>
@@ -156,13 +133,12 @@ function AssignTaxCollector() {
                       <p className="text-sm text-gray-600">{request.business_name}</p>
                       <p className="text-sm text-gray-500">{request.new_address}</p>
                     </div>
-                    <div className={`w-3 h-3 rounded-full ${
-                      selectedRequest?.id === request.id ? 'bg-red-500' : 'bg-gray-300'
-                    }`}></div>
+                    <div className={`w-3 h-3 rounded-full ${selectedRequest?.id === request.id ? 'bg-red-500' : 'bg-gray-300'
+                      }`}></div>
                   </div>
                 </div>
               ))}
-              
+
               {requests.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
                   No pending requests to assign
@@ -174,7 +150,7 @@ function AssignTaxCollector() {
           {/* Tax Collector Selection */}
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Select Tax Collector</h2>
-            
+
             {selectedRequest ? (
               <div className="space-y-4">
                 <div className="p-4 bg-gray-50 rounded-lg">
