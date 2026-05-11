@@ -33,6 +33,12 @@ Route::post('/tax-collector/login', [LoginController::class, 'taxCollectorLogin'
 // Tax Collector stats
 Route::get('/tax-collector/stats', [LoginController::class, 'getTaxCollectorStats'])->middleware('auth:sanctum');
 
+// Tax Collector profile
+Route::get('/tax-collector/profile', [LoginController::class, 'getTaxCollectorProfile'])->middleware('auth:sanctum');
+
+// Tax Collector assigned relocation requests
+Route::get('/tax-collector/assigned-requests', [LoginController::class, 'getAssignedRelocationRequests'])->middleware('auth:sanctum');
+
 // Relocation Request routes
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/relocation-requests', [RelocationRequestController::class, 'index']);

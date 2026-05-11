@@ -25,6 +25,7 @@ class RelocationRequest extends Model
         'approved_at',
         'rejected_at',
         'rejection_reason',
+        'tax_collector_id',
     ];
 
     protected $casts = [

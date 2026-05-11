@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import AdminSidebar from '../../../components/AdminSidebar';
-import api from '../../../utils/api';
+import AdminSidebar from '../../../../components/AdminSidebar';
+import api from '../../../../utils/api';
 
 function VerifyRequest() {
   const { requestId } = useParams();

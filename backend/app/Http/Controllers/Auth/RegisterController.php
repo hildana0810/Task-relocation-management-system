@@ -32,7 +32,7 @@ class RegisterController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'tinnumber' => ['nullable', 'string', 'max:50'],
+            'tinnumber' => ['nullable', 'string', 'max:50', 'unique:users'],
             'location' => ['nullable', 'string', 'max:255'],
         ]);
 
@@ -64,7 +64,7 @@ class RegisterController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'tinnumber' => ['nullable', 'string', 'max:50'],
+            'tinnumber' => ['nullable', 'string', 'max:50', 'unique:users'],
             'location' => ['nullable', 'string', 'max:255'],
         ]);
 

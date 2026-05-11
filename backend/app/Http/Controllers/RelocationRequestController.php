@@ -54,6 +54,7 @@ class RelocationRequestController extends Controller
     public function index()
     {
         $requests = RelocationRequest::where('user_id', Auth::id())
+            ->with(['taxCollector'])
             ->orderBy('created_at', 'desc')
             ->get();
             
@@ -66,6 +67,7 @@ class RelocationRequestController extends Controller
     public function show($id)
     {
         $request = RelocationRequest::where('user_id', Auth::id())
+            ->with(['taxCollector'])
             ->find($id);
             
         if (!$request) {

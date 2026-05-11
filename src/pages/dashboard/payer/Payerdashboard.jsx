@@ -25,26 +25,20 @@ function Payerdashboard() {
     { id: 3, message: "Your relocation request has been approved.", time: "3 days ago", read: true }
   ]);
 
+  const [userLoading, setUserLoading] = useState(true);
+
   // Load user data from localStorage on component mount
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       try {
         const user = JSON.parse(storedUser);
-        setUserData({
-          businessName: user.name || "John Enterprises",
-          tinNumber: user.tinnumber || "TIN-123456789",
-          currentAddress: user.location || "123 Main Street, Nairobi, 00100",
-          accountStatus: user.accountStatus || "Active",
-          complianceStatus: user.complianceStatus || "Compliant",
-          phoneNumber: user.phone || "+254 712 345 678",
-          email: user.email || "john@enterprises.com"
-        });
         // Clear any existing localStorage request data
         localStorage.removeItem('userStats');
         localStorage.removeItem('userRequests');
 
         // Fetch real data from database
+        fetchUserData();
         fetchUserRequests();
       } catch (error) {
         console.error('Error parsing user data:', error);
@@ -54,6 +48,27 @@ function Payerdashboard() {
       navigate('/login');
     }
   }, [navigate]);
+
+  // Fetch user data from database
+  const fetchUserData = async () => {
+    try {
+      const response = await api.get('/user');
+      const user = response.data;
+      setUserData({
+        businessName: user.business_name || user.name || "John Enterprises",
+        tinNumber: user.tinnumber || "TIN-123456789",
+        currentAddress: user.location || "123 Main Street, Nairobi, 00100",
+        accountStatus: user.accountStatus || "Active",
+        complianceStatus: user.complianceStatus || "Compliant",
+        phoneNumber: user.phone || "+254 712 345 678",
+        email: user.email || "john@enterprises.com"
+      });
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    } finally {
+      setUserLoading(false);
+    }
+  };
 
   // Fetch user requests from database
   const fetchUserRequests = async () => {
@@ -189,10 +204,20 @@ function Payerdashboard() {
                 </svg>
               </button>
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
-                  {userData.businessName.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2)}
-                </div>
-                <span className="text-sm font-medium text-gray-700">{userData.businessName}</span>
+                {userLoading ? (
+                  <div className="w-8 h-8 bg-gray-300 rounded-full animate-pulse"></div>
+                ) : (
+                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+                    {userData.businessName.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2)}
+                  </div>
+                )}
+                <span className="text-sm font-medium text-gray-700">
+                  {userLoading ? (
+                    <div className="h-4 bg-gray-300 rounded w-24 animate-pulse"></div>
+                  ) : (
+                    userData.businessName
+                  )}
+                </span>
               </div>
               <button
                 onClick={handleLogout}
@@ -210,29 +235,55 @@ function Payerdashboard() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-lg p-6 mb-8 text-white">
-          <h2 className="text-2xl font-bold mb-4">Welcome, {userData.businessName}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-              <p className="text-blue-100 text-sm">Business Name</p>
-              <p className="font-semibold">{userData.businessName}</p>
-            </div>
-            <div>
-              <p className="text-blue-100 text-sm">TIN Number</p>
-              <p className="font-semibold">{userData.tinNumber}</p>
-            </div>
-            <div>
-              <p className="text-blue-100 text-sm">Current Address</p>
-              <p className="font-semibold">{userData.currentAddress}</p>
-            </div>
-            <div>
-              <p className="text-blue-100 text-sm">Account Status</p>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                {userData.accountStatus}
-              </span>
+        {userLoading ? (
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-lg p-6 mb-8">
+            <div className="animate-pulse">
+              <div className="h-8 bg-blue-400 rounded w-64 mb-4"></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <div className="h-4 bg-blue-300 rounded w-20 mb-2"></div>
+                  <div className="h-6 bg-blue-400 rounded w-32"></div>
+                </div>
+                <div>
+                  <div className="h-4 bg-blue-300 rounded w-16 mb-2"></div>
+                  <div className="h-6 bg-blue-400 rounded w-24"></div>
+                </div>
+                <div>
+                  <div className="h-4 bg-blue-300 rounded w-20 mb-2"></div>
+                  <div className="h-6 bg-blue-400 rounded w-40"></div>
+                </div>
+                <div>
+                  <div className="h-4 bg-blue-300 rounded w-20 mb-2"></div>
+                  <div className="h-6 bg-blue-400 rounded w-16"></div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-lg p-6 mb-8 text-white">
+            <h2 className="text-2xl font-bold mb-4">Welcome, {userData.businessName}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <p className="text-blue-100 text-sm">Business Name</p>
+                <p className="font-semibold">{userData.businessName}</p>
+              </div>
+              <div>
+                <p className="text-blue-100 text-sm">TIN Number</p>
+                <p className="font-semibold">{userData.tinNumber}</p>
+              </div>
+              <div>
+                <p className="text-blue-100 text-sm">Current Address</p>
+                <p className="font-semibold">{userData.currentAddress}</p>
+              </div>
+              <div>
+                <p className="text-blue-100 text-sm">Account Status</p>
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  {userData.accountStatus}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
@@ -335,6 +386,7 @@ function Payerdashboard() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Request ID</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">New Postcode</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Submitted</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tax Collector</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Stage</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
@@ -347,6 +399,16 @@ function Payerdashboard() {
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{request.id}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.new_postcode}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(request.created_at).toLocaleDateString()}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {request.tax_collector ? (
+                              <div>
+                                <p className="font-medium text-gray-900">{request.tax_collector.name}</p>
+                                <p className="text-xs text-gray-500">{request.tax_collector.location}</p>
+                              </div>
+                            ) : (
+                              <span className="text-gray-400 italic">Not assigned</span>
+                            )}
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.status}</td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(request.status)}`}>
@@ -366,7 +428,7 @@ function Payerdashboard() {
                     ) : (
                       loading ? (
                         <tr>
-                          <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
+                          <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
                             <div className="flex flex-col items-center">
                               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-3"></div>
                               <p className="text-lg font-medium">Loading requests...</p>
@@ -375,7 +437,7 @@ function Payerdashboard() {
                         </tr>
                       ) : (
                         <tr>
-                          <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
+                          <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
                             <div className="flex flex-col items-center">
                               <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -464,26 +526,99 @@ function Payerdashboard() {
                 <h3 className="text-lg font-semibold text-gray-900">Business Profile</h3>
               </div>
               <div className="p-6 space-y-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Business Name</p>
-                  <p className="text-gray-900">{userData.businessName}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">TIN</p>
-                  <p className="text-gray-900">{userData.tinNumber}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Registered Address</p>
-                  <p className="text-gray-900">{userData.currentAddress}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Contact Info</p>
-                  <p className="text-gray-900">{userData.phoneNumber || '+254 712 345 678'}</p>
-                  <p className="text-gray-900">{userData.email || 'john@enterprises.com'}</p>
-                </div>
-                <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
-                  Update Profile
-                </button>
+                {userLoading ? (
+                  <div className="space-y-4 animate-pulse">
+                    <div>
+                      <div className="h-4 bg-gray-300 rounded w-24 mb-2"></div>
+                      <div className="h-5 bg-gray-400 rounded w-32"></div>
+                    </div>
+                    <div>
+                      <div className="h-4 bg-gray-300 rounded w-12 mb-2"></div>
+                      <div className="h-5 bg-gray-400 rounded w-28"></div>
+                    </div>
+                    <div>
+                      <div className="h-4 bg-gray-300 rounded w-28 mb-2"></div>
+                      <div className="h-5 bg-gray-400 rounded w-40"></div>
+                    </div>
+                    <div>
+                      <div className="h-4 bg-gray-300 rounded w-20 mb-2"></div>
+                      <div className="h-5 bg-gray-400 rounded w-32 mb-1"></div>
+                      <div className="h-5 bg-gray-400 rounded w-36"></div>
+                    </div>
+                    <div className="h-10 bg-gray-300 rounded w-full"></div>
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Business Name</p>
+                      <p className="text-gray-900">{userData.businessName}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">TIN</p>
+                      <p className="text-gray-900">{userData.tinNumber}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Registered Address</p>
+                      <p className="text-gray-900">{userData.currentAddress}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Contact Info</p>
+                      <p className="text-gray-900">{userData.phoneNumber || '+254 712 345 678'}</p>
+                      <p className="text-gray-900">{userData.email || 'john@enterprises.com'}</p>
+                    </div>
+                    <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
+                      Update Profile
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Assigned Tax Collector Section */}
+            <div className="bg-white rounded-lg shadow">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">Assigned Tax Collector</h3>
+              </div>
+              <div className="p-6">
+                {requests.filter(r => r.tax_collector).length > 0 ? (
+                  <div className="space-y-4">
+                    {requests.filter(r => r.tax_collector).slice(0, 3).map((request) => (
+                      <div key={request.id} className="border-l-4 border-blue-500 pl-4 py-2">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-medium text-gray-500">Request #{request.id}</span>
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(request.status)}`}>
+                            {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                            <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">{request.tax_collector.name}</p>
+                            <p className="text-sm text-gray-500">{request.tax_collector.location}</p>
+                            <p className="text-xs text-gray-400">{request.tax_collector.email}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {requests.filter(r => r.tax_collector).length > 3 && (
+                      <p className="text-xs text-gray-500 text-center pt-2">
+                        And {requests.filter(r => r.tax_collector).length - 3} more...
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <svg className="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <p className="text-sm text-gray-500">No tax collectors assigned yet</p>
+                    <p className="text-xs text-gray-400 mt-1">Tax collectors will be assigned when your request is approved</p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -493,17 +628,33 @@ function Payerdashboard() {
                 <h3 className="text-lg font-semibold text-gray-900">Compliance Status</h3>
               </div>
               <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm font-medium text-gray-500">Current Status</span>
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getComplianceBadge(userData.complianceStatus)}`}>
-                    {userData.complianceStatus}
-                  </span>
-                </div>
-                <div className="space-y-2 text-sm text-gray-600">
-                  <p>• All tax returns filed on time</p>
-                  <p>• No pending compliance issues</p>
-                  <p>• Last audit: March 2023</p>
-                </div>
+                {userLoading ? (
+                  <div className="animate-pulse">
+                    <div className="flex justify-between mb-4">
+                      <div className="h-4 bg-gray-300 rounded w-24"></div>
+                      <div className="h-6 bg-gray-400 rounded w-20"></div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-4 bg-gray-300 rounded w-full"></div>
+                      <div className="h-4 bg-gray-300 rounded w-full"></div>
+                      <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-sm font-medium text-gray-500">Current Status</span>
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getComplianceBadge(userData.complianceStatus)}`}>
+                        {userData.complianceStatus}
+                      </span>
+                    </div>
+                    <div className="space-y-2 text-sm text-gray-600">
+                      <p>• All tax returns filed on time</p>
+                      <p>• No pending compliance issues</p>
+                      <p>• Last audit: March 2023</p>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -515,6 +666,7 @@ function Payerdashboard() {
         isOpen={showRequestForm}
         onClose={() => setShowRequestForm(false)}
         onSubmit={handleRelocationSubmit}
+        userData={userData}
       />
     </div>
   );
