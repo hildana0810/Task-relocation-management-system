@@ -11,9 +11,6 @@ function RelocationRequestForm({ isOpen, onClose, onSubmit, userData }) {
     newPostcode: '',
     relocationDate: '',
     reasonForRelocation: '',
-    contactPerson: '',
-    contactPhone: '',
-    contactEmail: '',
     additionalInfo: ''
   });
 
@@ -45,19 +42,6 @@ function RelocationRequestForm({ isOpen, onClose, onSubmit, userData }) {
     if (!formData.newPostcode.trim()) newErrors.newPostcode = 'New postcode is required';
     if (!formData.relocationDate) newErrors.relocationDate = 'Relocation date is required';
     if (!formData.reasonForRelocation.trim()) newErrors.reasonForRelocation = 'Reason is required';
-    if (!formData.contactPerson.trim()) newErrors.contactPerson = 'Contact person is required';
-    if (!formData.contactPhone.trim()) newErrors.contactPhone = 'Contact phone is required';
-    if (!formData.contactEmail.trim()) newErrors.contactEmail = 'Contact email is required';
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (formData.contactEmail && !emailRegex.test(formData.contactEmail)) {
-      newErrors.contactEmail = 'Invalid email format';
-    }
-
-    const phoneRegex = /^[+]?[\d\s\-()]+$/;
-    if (formData.contactPhone && !phoneRegex.test(formData.contactPhone)) {
-      newErrors.contactPhone = 'Invalid phone format';
-    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -92,9 +76,6 @@ function RelocationRequestForm({ isOpen, onClose, onSubmit, userData }) {
           new_postcode: formData.newPostcode,
           relocation_date: formData.relocationDate,
           reason_for_relocation: formData.reasonForRelocation,
-          contact_person: formData.contactPerson,
-          contact_phone: formData.contactPhone,
-          contact_email: formData.contactEmail,
           additional_info: formData.additionalInfo
         });
 
@@ -113,24 +94,28 @@ function RelocationRequestForm({ isOpen, onClose, onSubmit, userData }) {
           newPostcode: '',
           relocationDate: '',
           reasonForRelocation: '',
-          contactPerson: '',
-          contactPhone: '',
-          contactEmail: '',
           additionalInfo: ''
         });
 
         onClose();
-
-        // Clear specific localStorage items
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user');
 
         // Show success message
         alert('Relocation request submitted successfully!');
 
       } catch (error) {
         console.error('Error submitting relocation request:', error);
-        alert('Error submitting request. Please try again.');
+        console.error('Error response:', error.response);
+        console.error('Error status:', error.response?.status);
+        console.error('Error data:', error.response?.data);
+        
+        if (error.response?.data?.message) {
+          alert(`Error: ${error.response.data.message}`);
+        } else if (error.response?.data?.errors) {
+          const errorMessages = Object.values(error.response.data.errors).flat();
+          alert(`Validation errors: ${errorMessages.join(', ')}`);
+        } else {
+          alert('Error submitting request. Please try again.');
+        }
       } finally {
         setIsSubmitting(false);
       }
@@ -317,65 +302,6 @@ function RelocationRequestForm({ isOpen, onClose, onSubmit, userData }) {
             </div>
           </div>
 
-          {/* Contact Information */}
-          <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Contact Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Contact Person *
-                </label>
-                <input
-                  type="text"
-                  name="contactPerson"
-                  value={formData.contactPerson}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.contactPerson ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                  placeholder="Enter contact person name"
-                />
-                {errors.contactPerson && (
-                  <p className="mt-1 text-sm text-red-600">{errors.contactPerson}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Contact Phone *
-                </label>
-                <input
-                  type="tel"
-                  name="contactPhone"
-                  value={formData.contactPhone}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.contactPhone ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                  placeholder="Enter phone number"
-                />
-                {errors.contactPhone && (
-                  <p className="mt-1 text-sm text-red-600">{errors.contactPhone}</p>
-                )}
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Contact Email *
-                </label>
-                <input
-                  type="email"
-                  name="contactEmail"
-                  value={formData.contactEmail}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.contactEmail ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                  placeholder="Enter email address"
-                />
-                {errors.contactEmail && (
-                  <p className="mt-1 text-sm text-red-600">{errors.contactEmail}</p>
-                )}
-              </div>
-            </div>
-          </div>
 
           {/* Additional Information */}
           <div>
