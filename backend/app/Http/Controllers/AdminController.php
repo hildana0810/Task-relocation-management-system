@@ -18,25 +18,25 @@ class AdminController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
+            "email" => "required|email",
+            "password" => "required",
         ]);
 
-        $admin = Admin::where('email', $request->email)->first();
+        $admin = Admin::where("email", $request->email)->first();
 
         if (!$admin || !Hash::check($request->password, $admin->password)) {
             throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
+                "email" => ["The provided credentials are incorrect."],
             ]);
         }
 
         // Create token for admin
-        $token = $admin->createToken('admin-token')->plainTextToken;
+        $token = $admin->createToken("admin-token")->plainTextToken;
 
         return response()->json([
-            'token' => $token,
-            'admin' => $admin,
-            'message' => 'Login successful'
+            "token" => $token,
+            "admin" => $admin,
+            "message" => "Login successful",
         ]);
     }
 
@@ -46,10 +46,13 @@ class AdminController extends Controller
     public function getStats()
     {
         return response()->json([
-            'totalUsers' => User::count(),
-            'totalRequests' => RelocationRequest::count(),
-            'pendingRequests' => RelocationRequest::where('status', 'pending')->count(),
-            'taxCollectors' => User::where('role', 'tax_collector')->count(),
+            "totalUsers" => User::count(),
+            "totalRequests" => RelocationRequest::count(),
+            "pendingRequests" => RelocationRequest::where(
+                "status",
+                "pending",
+            )->count(),
+            "taxCollectors" => User::where("role", "tax_collector")->count(),
         ]);
     }
 
@@ -58,7 +61,7 @@ class AdminController extends Controller
      */
     public function getRelocationRequests()
     {
-        $requests = RelocationRequest::with(['user', 'taxCollector'])->get();
+        $requests = RelocationRequest::with(["user", "taxCollector"])->get();
         return response()->json($requests);
     }
 
@@ -67,9 +70,9 @@ class AdminController extends Controller
      */
     public function getRelocationRequest($id)
     {
-        $request = RelocationRequest::with('user')->find($id);
+        $request = RelocationRequest::with("user")->find($id);
         if (!$request) {
-            return response()->json(['message' => 'Request not found'], 404);
+            return response()->json(["message" => "Request not found"], 404);
         }
         return response()->json($request);
     }
@@ -80,21 +83,21 @@ class AdminController extends Controller
     public function approveRequest(Request $request, $id)
     {
         $request->validate([
-            'tax_collector_id' => 'required|exists:users,id,role,tax_collector',
+            "tax_collector_id" => "required|exists:users,id,role,tax_collector",
         ]);
 
         $relocationRequest = RelocationRequest::find($id);
         if (!$relocationRequest) {
-            return response()->json(['message' => 'Request not found'], 404);
+            return response()->json(["message" => "Request not found"], 404);
         }
 
         $relocationRequest->update([
-            'status' => 'approved',
-            'tax_collector_id' => $request->tax_collector_id,
-            'approved_at' => now(),
+            "status" => "completed",
+            "tax_collector_id" => $request->tax_collector_id,
+            "approved_at" => now(),
         ]);
 
-        return response()->json(['message' => 'Request approved successfully']);
+        return response()->json(["message" => "Request approved successfully"]);
     }
 
     /**
@@ -104,15 +107,15 @@ class AdminController extends Controller
     {
         $relocationRequest = RelocationRequest::find($id);
         if (!$relocationRequest) {
-            return response()->json(['message' => 'Request not found'], 404);
+            return response()->json(["message" => "Request not found"], 404);
         }
 
         $relocationRequest->update([
-            'status' => 'rejected',
-            'rejected_at' => now(),
+            "status" => "rejected",
+            "rejected_at" => now(),
         ]);
 
-        return response()->json(['message' => 'Request rejected successfully']);
+        return response()->json(["message" => "Request rejected successfully"]);
     }
 
     /**
@@ -120,9 +123,9 @@ class AdminController extends Controller
      */
     public function getTaxCollectors()
     {
-        $taxCollectors = User::where('role', 'tax_collector')
-                            ->select('id', 'name', 'location as region', 'email')
-                            ->get();
+        $taxCollectors = User::where("role", "tax_collector")
+            ->select("id", "name", "location as region", "email")
+            ->get();
         return response()->json($taxCollectors);
     }
 
@@ -132,18 +135,18 @@ class AdminController extends Controller
     public function addTaxCollector(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'region' => 'required|string|max:255',
-            'password' => 'required|string|min:6',
+            "name" => "required|string|max:255",
+            "email" => "required|email|unique:users,email",
+            "region" => "required|string|max:255",
+            "password" => "required|string|min:6",
         ]);
 
         $taxCollector = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'location' => $request->region,
-            'role' => 'tax_collector',
-            'password' => Hash::make($request->password),
+            "name" => $request->name,
+            "email" => $request->email,
+            "location" => $request->region,
+            "role" => "tax_collector",
+            "password" => Hash::make($request->password),
         ]);
 
         return response()->json($taxCollector);
@@ -154,19 +157,22 @@ class AdminController extends Controller
      */
     public function updateTaxCollector(Request $request, $id)
     {
-        $taxCollector = User::where('role', 'tax_collector')->find($id);
+        $taxCollector = User::where("role", "tax_collector")->find($id);
         if (!$taxCollector) {
-            return response()->json(['message' => 'Tax collector not found'], 404);
+            return response()->json(
+                ["message" => "Tax collector not found"],
+                404,
+            );
         }
 
         $updateData = $request->all();
-        if (isset($updateData['region'])) {
-            $updateData['location'] = $updateData['region'];
-            unset($updateData['region']);
+        if (isset($updateData["region"])) {
+            $updateData["location"] = $updateData["region"];
+            unset($updateData["region"]);
         }
-        
-        if (isset($updateData['password'])) {
-            $updateData['password'] = Hash::make($updateData['password']);
+
+        if (isset($updateData["password"])) {
+            $updateData["password"] = Hash::make($updateData["password"]);
         }
 
         $taxCollector->update($updateData);
